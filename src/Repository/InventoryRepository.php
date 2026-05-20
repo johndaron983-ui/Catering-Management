@@ -35,6 +35,18 @@ class InventoryRepository extends ServiceEntityRepository
     }
 
     /**
+     * Find inventory item by product
+     */
+    public function findOneByProduct($product): ?Inventory
+    {
+        return $this->createQueryBuilder('i')
+            ->where('i.product = :product')
+            ->setParameter('product', $product)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
      * Find items that are low on stock
      */
     public function findLowStockItems(): array

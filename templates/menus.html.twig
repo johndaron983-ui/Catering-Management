@@ -3,62 +3,80 @@
 {% block title %}Menus - Every Event | Premium Catering & Events{% endblock %}
 
 {% block body %}
-    <!-- ========== HERO BREADCRUMB ========== -->
-    <section class="py-12 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h1 class="text-4xl font-bold text-gray-900">Our Menus</h1>
-            <p class="text-gray-600 mt-2">Exquisite dishes crafted with premium ingredients</p>
+    <!-- ========== HERO SECTION ========== -->
+    <section class="relative py-32 bg-brand-charcoal overflow-hidden">
+        <div class="absolute inset-0">
+            <div class="decoration-blob w-[600px] h-[600px] -top-48 -right-48 opacity-20"></div>
+            <div class="decoration-blob w-[400px] h-[400px] bottom-0 left-0 opacity-15"></div>
+        </div>
+        
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <span class="inline-block px-4 py-2 bg-brand-gold/20 text-brand-gold text-sm font-semibold rounded-full mb-4 scroll-animate">
+                <i class="fas fa-utensils mr-2"></i>Culinary Excellence
+            </span>
+            <h1 class="text-5xl md:text-6xl font-bold text-white mb-6 scroll-animate">
+                Our <span class="gold-gradient-text">Menu</span>
+            </h1>
+            <p class="text-xl text-gray-300 max-w-2xl mx-auto scroll-animate delay-100">
+                Exquisite dishes crafted with premium ingredients and Filipino flair
+            </p>
         </div>
     </section>
     
     <!-- ========== FEATURED DISHES ========== -->
-    <section class="py-24 bg-white">
+    <section class="py-24 bg-brand-cream relative overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16 fade-in-up">
-                <h2 class="text-5xl font-bold text-gray-900 mb-4">Featured Dishes</h2>
+            <div class="text-center mb-16 scroll-animate">
+                <span class="text-brand-gold font-semibold tracking-wider uppercase text-sm mb-2 block">Signature Collection</span>
+                <h2 class="text-4xl md:text-5xl font-bold text-brand-charcoal mb-4">Featured Dishes</h2>
                 <p class="text-lg text-gray-600 max-w-2xl mx-auto">
                     Explore our signature dishes inspired by traditional Filipino cuisine with a modern twist
                 </p>
+                <div class="w-24 h-1 bg-gradient-to-r from-brand-gold to-brand-orange mx-auto mt-6 rounded-full"></div>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Dish 1 -->
-                <div class="menu-item group cursor-pointer fade-in-up">
-                    <img src="/images/lechonbelly.jpg" alt="Lechon Belly">
+                <div class="menu-item group cursor-pointer scroll-animate delay-100" data-lightbox="/images/lechonbelly.jpg">
+                    <img src="/images/lechonbelly.jpg" alt="Lechon Belly" class="h-80">
                     <div class="menu-overlay">
-                        <h4 class="text-white text-lg font-bold">Lechon Belly</h4>
-                        <p class="text-gray-200 text-sm">Roasted pork perfection</p>
-                        <p class="text-white text-sm font-semibold mt-2">₱900 per serving</p>
+                        <span class="text-brand-gold text-sm font-semibold mb-1">Main Course</span>
+                        <h4 class="text-white text-xl font-bold">Lechon Belly</h4>
+                        <p class="text-gray-300 text-sm">Roasted pork perfection</p>
+                        <p class="text-brand-gold text-lg font-bold mt-2">₱900 <span class="text-sm font-normal text-gray-300">/ serving</span></p>
                     </div>
                 </div>
                 
                 <!-- Dish 2 -->
-                <div class="menu-item group cursor-pointer fade-in-up">
-                    <img src="/images/seafoods.jpg" alt="Seafood Sinigang">
+                <div class="menu-item group cursor-pointer scroll-animate delay-200" data-lightbox="/images/seafoods.jpg">
+                    <img src="/images/seafoods.jpg" alt="Seafood Sinigang" class="h-80">
                     <div class="menu-overlay">
-                        <h4 class="text-white text-lg font-bold">Seafoods</h4>
-                        <p class="text-gray-200 text-sm">Gourmet tamarind stew</p>
-                        <p class="text-white text-sm font-semibold mt-2">₱400 per serving</p>
+                        <span class="text-brand-gold text-sm font-semibold mb-1">Soup</span>
+                        <h4 class="text-white text-xl font-bold">Seafood Sinigang</h4>
+                        <p class="text-gray-300 text-sm">Gourmet tamarind stew</p>
+                        <p class="text-brand-gold text-lg font-bold mt-2">₱400 <span class="text-sm font-normal text-gray-300">/ serving</span></p>
                     </div>
                 </div>
                 
                 <!-- Dish 3 -->
-                <div class="menu-item group cursor-pointer fade-in-up">
-                    <img src="/images/lecheflan.jpg" alt="Leche Flan">
+                <div class="menu-item group cursor-pointer scroll-animate delay-300" data-lightbox="/images/lecheflan.jpg">
+                    <img src="/images/lecheflan.jpg" alt="Leche Flan" class="h-80">
                     <div class="menu-overlay">
-                        <h4 class="text-white text-lg font-bold">Leche Flan</h4>
-                        <p class="text-gray-200 text-sm">Golden custard delight</p>
-                        <p class="text-white text-sm font-semibold mt-2">₱150 per llanera</p>
+                        <span class="text-brand-gold text-sm font-semibold mb-1">Dessert</span>
+                        <h4 class="text-white text-xl font-bold">Leche Flan</h4>
+                        <p class="text-gray-300 text-sm">Golden custard delight</p>
+                        <p class="text-brand-gold text-lg font-bold mt-2">₱150 <span class="text-sm font-normal text-gray-300">/ llanera</span></p>
                     </div>
                 </div>
                 
                 <!-- Dish 4 -->
-                <div class="menu-item group cursor-pointer fade-in-up">
-                    <img src="/images/griledfish.jpg" alt="Grilled Fish">
+                <div class="menu-item group cursor-pointer scroll-animate delay-400" data-lightbox="/images/griledfish.jpg">
+                    <img src="/images/griledfish.jpg" alt="Grilled Fish" class="h-80">
                     <div class="menu-overlay">
-                        <h4 class="text-white text-lg font-bold">Grilled Catch</h4>
-                        <p class="text-gray-200 text-sm">Fresh daily selection</p>
-                        <p class="text-white text-sm font-semibold mt-2">₱600 per serving</p>
+                        <span class="text-brand-gold text-sm font-semibold mb-1">Seafood</span>
+                        <h4 class="text-white text-xl font-bold">Grilled Catch</h4>
+                        <p class="text-gray-300 text-sm">Fresh daily selection</p>
+                        <p class="text-brand-gold text-lg font-bold mt-2">₱600 <span class="text-sm font-normal text-gray-300">/ serving</span></p>
                     </div>
                 </div>
             </div>
@@ -66,125 +84,148 @@
     </section>
     
     <!-- ========== MENU PACKAGES ========== -->
-    <section class="py-24 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16 fade-in-up">
-                <h2 class="text-5xl font-bold text-gray-900 mb-4">Menu Packages</h2>
+    <section class="py-24 bg-white relative overflow-hidden">
+        <div class="decoration-blob w-64 h-64 top-10 -right-32 opacity-20"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-16 scroll-animate">
+                <span class="text-brand-gold font-semibold tracking-wider uppercase text-sm mb-2 block">Packages</span>
+                <h2 class="text-4xl md:text-5xl font-bold text-brand-charcoal mb-4">Menu Packages</h2>
                 <p class="text-lg text-gray-600 max-w-2xl mx-auto">
                     Choose from our carefully curated menu packages or create your own custom selection
                 </p>
+                <div class="w-24 h-1 bg-gradient-to-r from-brand-gold to-brand-orange mx-auto mt-6 rounded-full"></div>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Package 1 -->
-                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 service-card fade-in-up">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Classic Menu</h3>
-                    <p class="text-red-500 text-4xl font-bold mb-1">₱599</p>
-                    <p class="text-gray-600 text-sm mb-6"><span class="font-semibold">per pax</span> (min. 20 pax)</p>
+                <!-- Package 1: Classic -->
+                <div class="premium-card p-8 scroll-animate delay-100 relative">
+                    <h3 class="text-2xl font-bold text-brand-charcoal mb-2">Classic Menu</h3>
+                    <div class="flex items-baseline gap-1 mb-1">
+                        <span class="text-brand-gold text-4xl font-bold">₱599</span>
+                        <span class="text-gray-500 text-sm">/ pax</span>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-6">min. 20 pax</p>
                     <p class="text-gray-600 mb-6 font-medium">Perfect for intimate gatherings and casual celebrations</p>
                     <ul class="text-gray-600 text-sm space-y-3 mb-8">
                         <li class="flex items-start">
-                            <span class="mr-3 text-red-500">✓</span>
+                            <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
                             <span>Choice of 2 main courses</span>
                         </li>
                         <li class="flex items-start">
-                            <span class="mr-3 text-red-500">✓</span>
+                            <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
                             <span>3 side dishes</span>
                         </li>
                         <li class="flex items-start">
-                            <span class="mr-3 text-red-500">✓</span>
+                            <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
                             <span>Dessert selection</span>
                         </li>
                         <li class="flex items-start">
-                            <span class="mr-3 text-red-500">✓</span>
+                            <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
                             <span>Beverage service</span>
                         </li>
                     </ul>
-                    <button class="w-full cta-button">Select Package</button>
+                    <button class="w-full btn-primary">Select Package</button>
                 </div>
                 
-                <!-- Package 2 - BEST SELLER -->
-                <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 service-card fade-in-up relative border-2 border-red-500">
-                    <div class="absolute top-0 right-0 bg-red-500 text-white px-4 py-1 rounded-bl-lg text-xs font-bold tracking-wide">
+                <!-- Package 2: Premium (BEST SELLER) -->
+                <div class="premium-card p-8 scroll-animate delay-200 relative border-2 border-brand-gold transform scale-105">
+                    <div class="absolute top-0 right-0 bg-brand-gold text-white px-4 py-1 rounded-bl-xl text-xs font-bold tracking-wide">
                         BEST SELLER
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Premium Menu</h3>
-                    <p class="text-red-500 text-4xl font-bold mb-1">₱999</p>
-                    <p class="text-gray-600 text-sm mb-6"><span class="font-semibold">per pax</span> (min. 25 pax)</p>
+                    <h3 class="text-2xl font-bold text-brand-charcoal mb-2">Premium Menu</h3>
+                    <div class="flex items-baseline gap-1 mb-1">
+                        <span class="text-brand-gold text-4xl font-bold">₱999</span>
+                        <span class="text-gray-500 text-sm">/ pax</span>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-6">min. 25 pax</p>
                     <p class="text-gray-600 mb-6 font-medium">Elegant experience for special occasions and larger events</p>
                     <ul class="text-gray-600 text-sm space-y-3 mb-8">
                         <li class="flex items-start">
-                            <span class="mr-3 text-red-500">✓</span>
+                            <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
                             <span>Choice of 3 main courses</span>
                         </li>
                         <li class="flex items-start">
-                            <span class="mr-3 text-red-500">✓</span>
+                            <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
                             <span>5 side dishes</span>
                         </li>
                         <li class="flex items-start">
-                            <span class="mr-3 text-red-500">✓</span>
+                            <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
                             <span>Premium desserts</span>
                         </li>
                         <li class="flex items-start">
-                            <span class="mr-3 text-red-500">✓</span>
+                            <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
                             <span>Full bar service</span>
                         </li>
                         <li class="flex items-start">
-                            <span class="mr-3 text-red-500">✓</span>
+                            <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
                             <span>Dedicated staff</span>
                         </li>
                     </ul>
-                    <button class="w-full cta-button">Select Package</button>
+                    <button class="w-full btn-primary">Select Package</button>
                 </div>
                 
-                <!-- Package 3 -->
-                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 service-card fade-in-up">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Luxury Menu</h3>
-                    <p class="text-red-500 text-4xl font-bold mb-1">₱1,999</p>
-                    <p class="text-gray-600 text-sm mb-6"><span class="font-semibold">per pax</span> (min. 30 pax)</p>
+                <!-- Package 3: Luxury -->
+                <div class="premium-card p-8 scroll-animate delay-300 relative">
+                    <h3 class="text-2xl font-bold text-brand-charcoal mb-2">Luxury Menu</h3>
+                    <div class="flex items-baseline gap-1 mb-1">
+                        <span class="text-brand-gold text-4xl font-bold">₱1,999</span>
+                        <span class="text-gray-500 text-sm">/ pax</span>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-6">min. 30 pax</p>
                     <p class="text-gray-600 mb-6 font-medium">Ultimate culinary experience for the most discerning guests</p>
                     <ul class="text-gray-600 text-sm space-y-3 mb-8">
                         <li class="flex items-start">
-                            <span class="mr-3 text-red-500">✓</span>
+                            <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
                             <span>Customized multi-course</span>
                         </li>
                         <li class="flex items-start">
-                            <span class="mr-3 text-red-500">✓</span>
+                            <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
                             <span>Premium imported ingredients</span>
                         </li>
                         <li class="flex items-start">
-                            <span class="mr-3 text-red-500">✓</span>
+                            <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
                             <span>Dessert showcase</span>
                         </li>
                         <li class="flex items-start">
-                            <span class="mr-3 text-red-500">✓</span>
+                            <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
                             <span>Premium beverages</span>
                         </li>
                         <li class="flex items-start">
-                            <span class="mr-3 text-red-500">✓</span>
+                            <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
                             <span>Full event service team</span>
                         </li>
                         <li class="flex items-start">
-                            <span class="mr-3 text-red-500">✓</span>
+                            <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
                             <span>Dedicated event manager</span>
                         </li>
                     </ul>
-                    <button class="w-full cta-button">Select Package</button>
+                    <button class="w-full btn-primary">Select Package</button>
                 </div>
             </div>
         </div>
     </section>
     
     <!-- ========== CTA SECTION ========== -->
-    <section class="py-24 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-gradient-to-r from-red-400 to-red-600 rounded-lg p-12 text-center fade-in-up">
-                <h2 class="text-4xl font-bold text-white mb-6">Can't Find Your Perfect Menu?</h2>
-                <p class="text-white text-lg mb-8 opacity-90">
-                    We specialize in creating custom menus tailored to your preferences and dietary needs.
-                </p>
-                <a href="{{ path('app_contact') }}" class="cta-button" style="background-color: white; color: #d97066;">Create Custom Menu</a>
-            </div>
+    <section class="py-24 bg-brand-charcoal relative overflow-hidden">
+        <div class="absolute inset-0">
+            <div class="decoration-blob w-[500px] h-[500px] top-0 right-0 opacity-10"></div>
+            <div class="decoration-blob w-[400px] h-[400px] bottom-0 left-0 opacity-10"></div>
+        </div>
+        
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 scroll-animate">
+            <span class="inline-block px-4 py-2 bg-brand-gold/20 text-brand-gold text-sm font-semibold rounded-full mb-6">
+                Custom Orders
+            </span>
+            <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">
+                Can't Find Your Perfect <span class="gold-gradient-text">Menu?</span>
+            </h2>
+            <p class="text-gray-300 text-lg mb-10 max-w-2xl mx-auto">
+                We specialize in creating custom menus tailored to your preferences and dietary needs.
+            </p>
+            <a href="{{ path('app_contact') }}" class="btn-primary text-lg px-8 py-4">
+                <i class="fas fa-magic mr-2"></i>Create Custom Menu
+            </a>
         </div>
     </section>
 {% endblock %}

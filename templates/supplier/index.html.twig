@@ -79,7 +79,8 @@
     </div>
 </div>
 
-<!-- DataTables CSS and JS -->
+{% block scripts %}
+{{ parent() }}
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
@@ -99,7 +100,11 @@ function initializeSuppliersTable() {
         ordering: true,
         info: true,
         paging: true,
-        dom: '<"top"lf>rt<"bottom"ip>'
+        dom: '<"top"lf>rt<"bottom"ip>',
+        columnDefs: [
+            { orderable: false, targets: 0 },   // Image column
+            { orderable: false, targets: 6 }    // Actions column
+        ]
     });
 
     // Column indices: Name at 1, Product at 3, CreatedBy at 5
@@ -137,4 +142,5 @@ document.addEventListener('DOMContentLoaded', initializeSuppliersTable);
 document.addEventListener('turbo:load', initializeSuppliersTable);
 document.addEventListener('turbo:render', initializeSuppliersTable);
 </script>
+{% endblock %}
 {% endblock %}

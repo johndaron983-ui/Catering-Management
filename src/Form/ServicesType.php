@@ -30,10 +30,6 @@ class ServicesType extends AbstractType
                     'accept' => 'image/*'
                 ]
             ])
-            ->add('createdAt', null, [
-                'widget' => 'single_text'
-            ])
-            ->add('updatedAt')
         ;
     }
 

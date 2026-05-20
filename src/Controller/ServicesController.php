@@ -16,7 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 
-#[Route('/services')]
+#[Route('/admin/services')]
 #[isGranted(['ROLE_ADMIN', 'ROLE_STAFF'])]
 final class ServicesController extends AbstractController
 {

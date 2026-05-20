@@ -1,151 +1,80 @@
 {% extends 'admin/layout.html.twig' %}
+
 {% block title %}Products{% endblock %}
 
 {% block admin_body %}
 <div class="min-h-screen bg-gray-50 p-6">
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Products</h1>
-        <a href="{{ path('app_product_new') }}" class="bg-[#235A2F] text-white px-4 py-2 rounded-md hover:bg-green-700">Create new</a>
-    </div>
+    <div class="max-w-6xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Products</h1>
+                <p class="text-sm text-gray-500">Manage your product catalog</p>
+            </div>
+            <a href="{{ path('app_product_new') }}" class="inline-block bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">+ New Product</a>
+        </div>
 
-    <!-- SEARCH AND FILTER -->
-    <div class="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">
-        <div class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Product Name Search -->
-                <div>
-                    <label for="search-name" class="block text-sm font-medium text-gray-700">Product Name</label>
-                    <input 
-                        type="text" 
-                        id="search-name" 
-                        placeholder="Search by name..."
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#235A2F] focus:ring-[#235A2F]"
-                    >
+        {# Search & Filter #}
+        <div class="bg-white shadow rounded-lg p-4 mb-6">
+            <form method="get" class="flex flex-wrap gap-4">
+                <div class="flex-1 min-w-[200px]">
+                    <input type="text" name="search" value="{{ current_search }}" placeholder="Search products..." class="w-full border border-gray-300 rounded-md px-3 py-2">
                 </div>
-
-                <!-- Category Filter -->
-                <div>
-                    <label for="filter-category" class="block text-sm font-medium text-gray-700">Category</label>
-                    <select id="filter-category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#235A2F] focus:ring-[#235A2F]">
+                <div class="w-48">
+                    <select name="category" class="w-full border border-gray-300 rounded-md px-3 py-2">
                         <option value="">All Categories</option>
                         {% for cat in categories %}
-                            <option value="{{ cat }}">{{ cat }}</option>
+                            <option value="{{ cat }}" {% if cat == current_category %}selected{% endif %}>{{ cat }}</option>
                         {% endfor %}
                     </select>
                 </div>
-            </div>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Filter</button>
+                {% if current_search or current_category %}
+                    <a href="{{ path('app_product_index') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">Clear</a>
+                {% endif %}
+            </form>
+        </div>
 
-            <div class="flex gap-2">
-                <button id="clear-filters" class="inline-flex items-center rounded-md bg-gray-400 px-4 py-2 text-white hover:opacity-90">
-                    Clear Filters
-                </button>
-            </div>
+        {# Products Table #}
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for product in products %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    {% if product.imagePath %}
+                                        <img src="{{ asset(product.imagePath) }}" alt="{{ product.name }}" class="w-10 h-10 object-cover rounded-md mr-3">
+                                    {% else %}
+                                        <div class="w-10 h-10 bg-gray-200 rounded-md mr-3 flex items-center justify-center text-gray-400">?</div>
+                                    {% endif %}
+                                    <span class="text-sm font-medium text-gray-900">{{ product.name }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ product.category }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ product.unitPrice }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ product.createDate ? product.createDate|date('Y-m-d') : '' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                <a href="{{ path('app_product_show', {'id': product.id}) }}" class="text-blue-600 hover:text-blue-800">View</a>
+                                <a href="{{ path('app_product_edit', {'id': product.id}) }}" class="text-green-600 hover:text-green-800">Edit</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">No products found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-
-    <div class="bg-white shadow-sm rounded-lg overflow-hidden">
-        <table id="products-table" class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Create Date</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created By</th>
-                    <th class="px-6 py-3"></th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-            {% for product in products %}
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {% if product.imagePath %}
-                            <img src="{{ product.imagePath }}" alt="{{ product.name }}" class="h-12 w-12 object-cover rounded-md">
-                        {% else %}
-                            <div class="h-12 w-12 bg-gray-200 rounded-md flex items-center justify-center">
-                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
-                            </div>
-                        {% endif %}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ product.name }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.category }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₱{{ product.unitPrice|number_format(2, '.', ',') }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.createDate ? product.createDate|date('Y-m-d H:i') : '' }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.createdBy ? product.createdBy.username : '-' }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    <a href="{{ path('app_product_show', {'id': product.id}) }}" class="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-white hover:opacity-90">Show</a>
-                    <a href="{{ path('app_product_edit', {'id': product.id}) }}" class="inline-flex items-center rounded-md bg-emerald-600 px-3 py-1.5 text-white hover:opacity-90">Edit</a>
-                    </td>   
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">No records found</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
 </div>
-
-<!-- DataTables CSS and JS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-
-<script>
-function initializeProductsTable() {
-    // Destroy existing DataTable instance if it exists
-    if ($.fn.DataTable.isDataTable('#products-table')) {
-        $('#products-table').DataTable().destroy();
-    }
-
-    const table = $('#products-table').DataTable({
-        responsive: true,
-        pageLength: 25,
-        lengthChange: true,
-        searching: true,
-        ordering: true,
-        info: true,
-        paging: true,
-        dom: '<"top"lf>rt<"bottom"ip>'
-    });
-
-    // Column indices: Name at 1, Category at 2, CreatedBy at 5
-    const COL_NAME = 1;
-    const COL_CATEGORY = 2;
-
-    // Filter by Category dropdown
-    $('#filter-category').off('change').on('change', function() {
-        table.column(COL_CATEGORY).search(this.value).draw();
-    });
-
-    // Search by Product Name with debouncing
-    let searchTimeout;
-    $('#search-name').off('keyup').on('keyup', function() {
-        clearTimeout(searchTimeout);
-        const searchValue = this.value;
-        searchTimeout = setTimeout(() => {
-            table.column(COL_NAME).search(searchValue).draw();
-        }, 300);
-    });
-
-    // Clear all filters
-    $('#clear-filters').off('click').on('click', function(e) {
-        e.preventDefault();
-        
-        $('#filter-category').val('').trigger('change');
-        $('#search-name').val('');
-        
-        table.search('').columns().search('').draw();
-    });
-}
-
-// Initialize on page load and Turbo navigation
-document.addEventListener('DOMContentLoaded', initializeProductsTable);
-document.addEventListener('turbo:load', initializeProductsTable);
-document.addEventListener('turbo:render', initializeProductsTable);
-</script>
 {% endblock %}

@@ -51,6 +51,11 @@ class LoginAuthenticator extends AbstractLoginFormAuthenticator
                 if (!$user instanceof User || !$user->isActive()) {
                     throw new CustomUserMessageAuthenticationException('Your account has been disabled. Please contact an administrator.');
                 }
+
+                // Check if email is verified
+                if (!$user->isVerified()) {
+                    throw new CustomUserMessageAuthenticationException('Please verify your email address before logging in.');
+                }
                 
                 return $user;
             }),
@@ -65,10 +70,20 @@ class LoginAuthenticator extends AbstractLoginFormAuthenticator
     {
     
         $user = $token->getUser();
-        if ($user instanceof User && !$user->isActive()) {
-            // Force logout if account became inactive
-            $request->getSession()->invalidate();
-            throw new CustomUserMessageAuthenticationException('Your account has been disabled. Please contact an administrator.');
+        if ($user instanceof User) {
+            // Check if account is inactive
+            if (!$user->isActive()) {
+                // Force logout if account became inactive
+                $request->getSession()->invalidate();
+                throw new CustomUserMessageAuthenticationException('Your account has been disabled. Please contact an administrator.');
+            }
+
+            // Check if email is verified
+            if (!$user->isVerified()) {
+                // Force logout if email is not verified
+                $request->getSession()->invalidate();
+                throw new CustomUserMessageAuthenticationException('Please verify your email address before logging in.');
+            }
         }
 
         // Log the login activity

@@ -35,20 +35,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                {{ form_label(form.createdAt, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700'}}) }}
-                {{ form_widget(form.createdAt, {'attr': {'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#235A2F] focus:ring-[#235A2F]'}}) }}
-                {{ form_errors(form.createdAt) }}
-            </div>
-            <div>
-                {{ form_label(form.updatedAt, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700'}}) }}
-                {{ form_widget(form.updatedAt, {'attr': {'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#235A2F] focus:ring-[#235A2F]'}}) }}
-                {{ form_errors(form.updatedAt) }}
-            </div>
-        </div>
-
-         <div>
+        <div>
             {{ form_label(form.image, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700'}}) }}
             {{ form_widget(form.image, {'attr': {'class': 'mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#235A2F] file:text-white hover:file:bg-[#1a4a26]'}}) }}
             {{ form_errors(form.image) }}

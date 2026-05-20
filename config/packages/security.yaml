@@ -24,7 +24,7 @@ security:
                 check_path: /api/login
                 username_path: username
                 password_path: password
-                success_handler: lexik_jwt_authentication.handler.authentication_success    
+                success_handler: App\Security\JWTAuthenticationSuccessHandler
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
             jwt: ~
         main:
@@ -33,7 +33,9 @@ security:
 
             logout:
                 path: app_logout
-            custom_authenticator: App\Security\LoginAuthenticator
+            custom_authenticator: 
+                - App\Security\LoginAuthenticator
+                - App\Security\GoogleAuthenticator
                 # where to redirect after logout
                 # target: app_any_route
 
@@ -46,11 +48,15 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # Public API login endpoint
+        # Public API endpoints
+        - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/google-login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/google-debug, roles: PUBLIC_ACCESS }
+        - { path: ^/api/mobile/health, roles: PUBLIC_ACCESS }
 
         # All other API routes require a valid JWT
-        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api, roles:  }
 
         # Shared admin area exceptions must be before the catch-all ^/admin rule
         - { path: ^/admin/inventory, roles: ["ROLE_ADMIN", "ROLE_STAFF"] }
@@ -61,7 +67,7 @@ security:
         - { path: ^/verify-email, roles: PUBLIC_ACCESS }
         - { path: ^/activity-logs, roles: ROLE_ADMIN }
         - { path: ^/bookings, roles: ["ROLE_ADMIN", "ROLE_STAFF"] }
-        - { path: ^/services, roles: ["ROLE_ADMIN", "ROLE_STAFF"] }
+        - { path: ^/admin/services, roles: ["ROLE_ADMIN", "ROLE_STAFF"] }
         - { path: ^/inventory, roles: ["ROLE_ADMIN", "ROLE_STAFF"] }
         - { path: ^/products, roles: ["ROLE_ADMIN", "ROLE_STAFF"] }
         - { path: ^/suppliers, roles: ["ROLE_ADMIN", "ROLE_STAFF"] }

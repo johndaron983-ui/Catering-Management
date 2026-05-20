@@ -225,7 +225,17 @@
     </div>
 </div>
 
-<!-- DataTables CSS and JS -->
+<!-- PAGINATION (IF NEEDED) -->
+{% if inventories|length > 0 %}
+<div class="mt-6 flex items-center justify-between">
+    <div class="text-sm text-gray-700">
+        Showing {{ inventories|length }} item(s)
+    </div>
+</div>
+{% endif %}
+
+{% block scripts %}
+{{ parent() }}
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
@@ -245,7 +255,10 @@ function initializeInventoryTable() {
         ordering: true,
         info: true,
         paging: true,
-        dom: '<"top"lf>rt<"bottom"ip>'
+        dom: '<"top"lf>rt<"bottom"ip>',
+        columnDefs: [
+            { orderable: false, targets: 6 }   // Actions column
+        ]
     });
 
     // Column indices: Item at 0, Category at 1, Status at 4, CreatedBy at 5
@@ -290,13 +303,5 @@ document.addEventListener('DOMContentLoaded', initializeInventoryTable);
 document.addEventListener('turbo:load', initializeInventoryTable);
 document.addEventListener('turbo:render', initializeInventoryTable);
 </script>
-
-<!-- PAGINATION (IF NEEDED) -->
-{% if inventories|length > 0 %}
-<div class="mt-6 flex items-center justify-between">
-    <div class="text-sm text-gray-700">
-        Showing {{ inventories|length }} item(s)
-    </div>
-</div>
-{% endif %}
+{% endblock %}
 {% endblock %}

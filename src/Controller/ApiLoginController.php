@@ -47,10 +47,15 @@ class ApiLoginController extends AbstractController
         if (
             !$user instanceof User ||
             !$user->isActive() ||
+            !$user->isVerified() ||
             !$this->passwordHasher->isPasswordValid($user, $password)
         ) {
+            $message = 'Invalid credentials.';
+            if ($user instanceof User && $user->isActive() && !$user->isVerified()) {
+                $message = 'Please verify your email address before logging in.';
+            }
             return new JsonResponse([
-                'message' => 'Invalid credentials.',
+                'message' => $message,
             ], Response::HTTP_UNAUTHORIZED);
         }
 

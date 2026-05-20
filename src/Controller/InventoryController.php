@@ -95,6 +95,44 @@ class InventoryController extends AbstractController
                 $inventory->setName($inventory->getProduct()->getName());
             }
             
+            // Check if item already exists for this product
+            $existingInventory = $this->inventoryRepository->findOneByProduct($inventory->getProduct());
+            
+            if ($existingInventory) {
+                // Item exists - update stock quantity instead of creating new row
+                $additionalStock = $inventory->getCurrentStock();
+                $newStock = $existingInventory->getCurrentStock() + $additionalStock;
+                $existingInventory->setCurrentStock($newStock);
+                $existingInventory->setLastRestocked(new \DateTime());
+                $existingInventory->setUpdatedAt(new \DateTime());
+                
+                // Update other fields if needed (optional - only if they were changed)
+                if ($inventory->getUnitPrice()) {
+                    $existingInventory->setUnitPrice($inventory->getUnitPrice());
+                }
+                if ($inventory->getSupplier()) {
+                    $existingInventory->setSupplier($inventory->getSupplier());
+                }
+                
+                $this->entityManager->flush();
+                
+                // Log inventory restock
+                $user = $this->getUser();
+                if ($user) {
+                    $this->activityLogService->logInventoryStockAdjustment(
+                        $user,
+                        $existingInventory->getId(),
+                        $existingInventory->getName(),
+                        $additionalStock,
+                        'Stock added to existing item'
+                    );
+                }
+                
+                $this->addFlash('success', "Stock updated successfully! Added {$additionalStock} {$existingInventory->getUnit()}(s) to existing item '{$existingInventory->getName()}'. New total: {$newStock} {$existingInventory->getUnit()}(s).");
+                return $this->redirectToRoute('app_inventory_index');
+            }
+            
+            // Item does not exist - create new inventory record
             /** @var UploadedFile $imageFile */
             $imageFile = $form->get('imageFile')->getData();
             
@@ -121,7 +159,7 @@ class InventoryController extends AbstractController
                 );
             }
 
-            $this->addFlash('success', 'Inventory item created successfully!');
+            $this->addFlash('success', 'New inventory item created successfully!');
             return $this->redirectToRoute('app_inventory_index');
         }
 

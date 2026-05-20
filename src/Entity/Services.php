@@ -11,6 +11,7 @@ use App\Entity\Inventory;
 use App\Entity\User;
 
 #[ORM\Entity(repositoryClass: ServicesRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Services
 {
     #[ORM\Id]
@@ -182,6 +183,19 @@ class Services
         $this->bookings = new ArrayCollection();
         $this->inventory = new ArrayCollection();
         $this->serviceInventories = new ArrayCollection();
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $this->createdAt = new \DateTimeImmutable();
+        $this->updatedAt = new \DateTime();
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updatedAt = new \DateTime();
     }
 
     /**

@@ -9,6 +9,13 @@
         <a href="{{ path('app_services_index') }}" class="inline-flex items-center rounded-md bg-gray-600 px-3 py-1.5 text-white hover:opacity-90">Back to list</a>
     </div>
 
+    {% if not form.vars.valid %}
+        <div class="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <strong>Form errors:</strong>
+            {{ form_errors(form) }}
+        </div>
+    {% endif %}
+
     <div class="mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm p-4">
         {{ include('services/_form.html.twig') }}
     </div>

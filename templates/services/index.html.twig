@@ -101,7 +101,8 @@
     </div>
 </div>
 
-<!-- DataTables CSS and JS -->
+{% block scripts %}
+{{ parent() }}
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
@@ -121,7 +122,11 @@ function initializeServicesTable() {
         ordering: true,
         info: true,
         paging: true,
-        dom: '<"top"lf>rt<"bottom"ip>'
+        dom: '<"top"lf>rt<"bottom"ip>',
+        columnDefs: [
+            { orderable: false, targets: 0 },   // Image column
+            { orderable: false, targets: 10 }   // Actions column
+        ]
     });
 
     // Column indices: Name at 1, EventType at 3
@@ -159,4 +164,5 @@ document.addEventListener('DOMContentLoaded', initializeServicesTable);
 document.addEventListener('turbo:load', initializeServicesTable);
 document.addEventListener('turbo:render', initializeServicesTable);
 </script>
+{% endblock %}
 {% endblock %}
