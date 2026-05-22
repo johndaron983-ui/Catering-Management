@@ -41,7 +41,7 @@
                 <span>Suppliers</span>
             </a>
             {% if 'ROLE_ADMIN' in app.user.roles %}
-            <a href="{{ path('app_admin_dashboard') }}" class="group flex items-center gap-3 px-3 py-2 rounded-md hover:bg-white/10 {{ app.current_route starts with 'app_admin' ?  : '' }}">
+            <a href="{{ path('app_admin_dashboard') }}" class="group flex items-center gap-3 px-3 py-2 rounded-md hover:bg-white/10 {{ app.current_route starts with 'app_admin' ? 'bg-white/10' : '' }}">
                 <span>📈</span>
                 <span>Analytics</span>
             </a>

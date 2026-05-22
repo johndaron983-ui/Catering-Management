@@ -15,9 +15,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/inventory')]
-#[isGranted(['ROLE_STAFF', 'ROLE_ADMIN'])]
+#[IsGranted(['ROLE_STAFF', 'ROLE_ADMIN'])]
 class InventoryController extends AbstractController
 {
     public function __construct(

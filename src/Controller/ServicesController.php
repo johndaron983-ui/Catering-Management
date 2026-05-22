@@ -15,9 +15,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/services')]
-#[isGranted(['ROLE_ADMIN', 'ROLE_STAFF'])]
+#[IsGranted(['ROLE_ADMIN', 'ROLE_STAFF'])]
 final class ServicesController extends AbstractController
 {
     #[Route(name: 'app_services_index', methods: ['GET'])]
