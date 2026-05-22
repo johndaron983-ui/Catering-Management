@@ -40,8 +40,7 @@ class LoginAuthenticator extends AbstractLoginFormAuthenticator
 
         return new Passport(
             new UserBadge($username, function (string $userIdentifier) {
-                // Load user by username only
-                $user = $this->userRepository->findOneBy(['username' => $userIdentifier]);
+                $user = $this->userRepository->findOneByIdentifier($userIdentifier);
 
                 if (!$user) {
                     throw new CustomUserMessageAuthenticationException('Invalid credentials.');
@@ -52,8 +51,7 @@ class LoginAuthenticator extends AbstractLoginFormAuthenticator
                     throw new CustomUserMessageAuthenticationException('Your account has been disabled. Please contact an administrator.');
                 }
 
-                // Check if email is verified
-                if (!$user->isVerified()) {
+                if ($user->isVerified() !== true) {
                     throw new CustomUserMessageAuthenticationException('Please verify your email address before logging in.');
                 }
                 
@@ -78,17 +76,18 @@ class LoginAuthenticator extends AbstractLoginFormAuthenticator
                 throw new CustomUserMessageAuthenticationException('Your account has been disabled. Please contact an administrator.');
             }
 
-            // Check if email is verified
-            if (!$user->isVerified()) {
-                // Force logout if email is not verified
+            if ($user->isVerified() !== true) {
                 $request->getSession()->invalidate();
                 throw new CustomUserMessageAuthenticationException('Please verify your email address before logging in.');
             }
         }
 
-        // Log the login activity
         if ($user) {
-            $this->activityLogService->logLogin($user);
+            try {
+                $this->activityLogService->logLogin($user);
+            } catch (\Throwable $e) {
+                // Do not block login if activity logging fails
+            }
         }
 
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {

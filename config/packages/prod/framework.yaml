@@ -1,0 +1,5 @@
+framework:
+    trusted_proxies: 'private_ranges,REMOTE_ADDR'
+    session:
+        cookie_secure: true
+        cookie_samesite: lax

@@ -31,6 +31,7 @@ class UserFixtures extends Fixture
             'admin123'
         );
         $admin->setPassword($hashedPassword);
+        $admin->setIsVerified(true);
         $admin->setCreatedAt(new \DateTimeImmutable());
         $manager->persist($admin);
 
@@ -44,6 +45,7 @@ class UserFixtures extends Fixture
             'staff123'
         );
         $staff->setPassword($hashedPassword);
+        $staff->setIsVerified(true);
         $staff->setCreatedAt(new \DateTimeImmutable());
         $manager->persist($staff);
         
@@ -56,6 +58,7 @@ class UserFixtures extends Fixture
             'john123'
         );
         $john->setPassword($hashedPassword);
+        $john->setIsVerified(true);
         $john->setCreatedAt(new \DateTimeImmutable());
         $manager->persist($john);
 
