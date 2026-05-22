@@ -4,49 +4,58 @@ namespace App\Service;
 
 use App\Entity\ActivityLog;
 use App\Entity\User;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 
 class ActivityLogService
 {
-    public function __construct(private EntityManagerInterface $entityManager)
+    public function __construct(private ManagerRegistry $managerRegistry)
     {
     }
 
     /**
-     * Log a user activity
+     * Log a user activity. Returns null if logging fails (does not break the request).
      */
-    public function log(User $user, string $action, ?string $targetData = null, ?string $recordType = null, ?int $recordId = null): ActivityLog
+    public function log(User $user, string $action, ?string $targetData = null, ?string $recordType = null, ?int $recordId = null): ?ActivityLog
     {
-        $log = new ActivityLog();
-        $log->setUser($user);
-        $log->setUsername($user->getUsername());
-        
-        // Get primary role (filter out ROLE_USER which is added by default)
-        $roles = $user->getRoles();
-        $role = 'ROLE_USER';
-        foreach ($roles as $r) {
-            if ($r !== 'ROLE_USER') {
-                $role = $r;
-                break;
+        $entityManager = $this->managerRegistry->getManager();
+
+        try {
+            $log = new ActivityLog();
+            $log->setUser($user);
+            $log->setUsername($user->getUsername());
+
+            $roles = $user->getRoles();
+            $role = 'ROLE_USER';
+            foreach ($roles as $r) {
+                if ($r !== 'ROLE_USER') {
+                    $role = $r;
+                    break;
+                }
             }
+            $log->setRole($role);
+            $log->setAction($action);
+            $log->setTargetData($targetData);
+            $log->setRecordType($recordType);
+            $log->setRecordId($recordId);
+            $log->setCreatedAt(new \DateTime());
+
+            $entityManager->persist($log);
+            $entityManager->flush();
+
+            return $log;
+        } catch (\Throwable) {
+            if (!$entityManager->isOpen()) {
+                $this->managerRegistry->resetManager();
+            }
+
+            return null;
         }
-        $log->setRole($role);
-        $log->setAction($action);
-        $log->setTargetData($targetData);
-        $log->setRecordType($recordType);
-        $log->setRecordId($recordId);
-        $log->setCreatedAt(new \DateTime());
-
-        $this->entityManager->persist($log);
-        $this->entityManager->flush();
-
-        return $log;
     }
 
     /**
      * Log login activity
      */
-    public function logLogin(User $user): ActivityLog
+    public function logLogin(User $user): ?ActivityLog
     {
         return $this->log($user, 'LOGIN', null);
     }
@@ -54,7 +63,7 @@ class ActivityLogService
     /**
      * Log logout activity
      */
-    public function logLogout(User $user): ActivityLog
+    public function logLogout(User $user): ?ActivityLog
     {
         return $this->log($user, 'LOGOUT', null);
     }
