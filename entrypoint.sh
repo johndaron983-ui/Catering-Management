@@ -35,6 +35,11 @@ if [ -n "${DATABASE_URL:-}" ]; then
   run_console "php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration" || {
     echo "WARNING: migrations failed; continuing startup (check DATABASE_URL)"
   }
+
+  echo "Ensuring bootstrap admin account exists..."
+  run_console "php bin/console app:bootstrap-admin --no-interaction" || {
+    echo "WARNING: bootstrap admin failed"
+  }
 else
   echo "DATABASE_URL not set; skipping migrations"
 fi
