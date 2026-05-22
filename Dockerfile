@@ -25,8 +25,19 @@ RUN if [ ! -f /app/.env ]; then \
     printf 'APP_ENV=prod\nAPP_DEBUG=false\nAPP_SECRET=ChangeMeInRailway\n' > /app/.env; \
     fi
 
-RUN composer install --no-interaction --no-dev --optimize-autoloader --no-ansi \
-    && php bin/console cache:warmup --env=prod --no-debug || true
+RUN composer install --no-interaction --no-dev --optimize-autoloader --no-ansi
+
+# Webpack Encore assets (requires vendor/ for @symfony/ux-turbo file: dependency)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm ci \
+    && npm run build \
+    && rm -rf node_modules \
+    && apt-get purge -y nodejs \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN php bin/console cache:warmup --env=prod --no-debug || true
 
 FROM php:8.3-fpm AS runtime
 
