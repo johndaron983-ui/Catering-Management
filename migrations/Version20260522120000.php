@@ -34,29 +34,15 @@ final class Version20260522120000 extends AbstractMigration
 
     private function addCreatedByColumn(string $table): void
     {
-        $schemaManager = $this->connection->createSchemaManager();
-
-        if (!$schemaManager->tablesExist([$table])) {
-            return;
-        }
-
-        $columns = $schemaManager->listTableColumns($table);
-        if (isset($columns['created_by_id'])) {
+        if (!$this->tableExists($table) || $this->columnExists($table, 'created_by_id')) {
             return;
         }
 
         $fkName = 'FK_'.strtoupper($table).'_CREATED_BY';
         $idxName = 'IDX_'.strtoupper($table).'_CREATED_BY';
 
-        $this->addSql(sprintf(
-            'ALTER TABLE `%s` ADD created_by_id INT DEFAULT NULL',
-            $table
-        ));
-        $this->addSql(sprintf(
-            'CREATE INDEX %s ON `%s` (created_by_id)',
-            $idxName,
-            $table
-        ));
+        $this->addSql(sprintf('ALTER TABLE `%s` ADD created_by_id INT DEFAULT NULL', $table));
+        $this->addSql(sprintf('CREATE INDEX %s ON `%s` (created_by_id)', $idxName, $table));
         $this->addSql(sprintf(
             'ALTER TABLE `%s` ADD CONSTRAINT %s FOREIGN KEY (created_by_id) REFERENCES `user` (id)',
             $table,
@@ -66,20 +52,32 @@ final class Version20260522120000 extends AbstractMigration
 
     private function addActivityLogRecordColumns(): void
     {
-        $schemaManager = $this->connection->createSchemaManager();
-
-        if (!$schemaManager->tablesExist(['activity_logs'])) {
+        if (!$this->tableExists('activity_logs')) {
             return;
         }
 
-        $columns = $schemaManager->listTableColumns('activity_logs');
-
-        if (!isset($columns['record_type'])) {
+        if (!$this->columnExists('activity_logs', 'record_type')) {
             $this->addSql('ALTER TABLE activity_logs ADD record_type VARCHAR(100) DEFAULT NULL');
         }
 
-        if (!isset($columns['record_id'])) {
+        if (!$this->columnExists('activity_logs', 'record_id')) {
             $this->addSql('ALTER TABLE activity_logs ADD record_id INT DEFAULT NULL');
         }
+    }
+
+    private function tableExists(string $table): bool
+    {
+        return $this->connection->createSchemaManager()->tablesExist([$table]);
+    }
+
+    private function columnExists(string $table, string $column): bool
+    {
+        $count = (int) $this->connection->fetchOne(
+            'SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?',
+            [$table, $column]
+        );
+
+        return $count > 0;
     }
 }
