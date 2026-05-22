@@ -47,6 +47,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app /app
+COPY .env.docker /app/.env.docker
 
 RUN mkdir -p /app/var /app/config/jwt && \
     chown -R www-data:www-data /app && \
@@ -57,6 +58,7 @@ COPY nginx-main.conf /etc/nginx/nginx.conf
 
 RUN rm -rf /etc/nginx/conf.d/* /etc/nginx/sites-enabled /etc/nginx/sites-available
 COPY nginx.conf /etc/nginx/conf.d/symfony.conf
+COPY docker/php-fpm/symfony.conf /usr/local/etc/php-fpm.d/zz-symfony.conf
 
 COPY entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
