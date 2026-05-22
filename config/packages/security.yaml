@@ -69,8 +69,8 @@ security:
         - { path: ^/bookings, roles: ["ROLE_ADMIN", "ROLE_STAFF"] }
         - { path: ^/admin/services, roles: ["ROLE_ADMIN", "ROLE_STAFF"] }
         - { path: ^/inventory, roles: ["ROLE_ADMIN", "ROLE_STAFF"] }
-        - { path: ^/products, roles: ["ROLE_ADMIN", "ROLE_STAFF"] }
-        - { path: ^/suppliers, roles: ["ROLE_ADMIN", "ROLE_STAFF"] }
+        - { path: ^/product, roles: ["ROLE_ADMIN", "ROLE_STAFF"] }
+        - { path: ^/supplier, roles: ["ROLE_ADMIN", "ROLE_STAFF"] }
         - { path: ^/profile, roles: ROLE_USER }
 
 when@test:
