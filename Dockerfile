@@ -14,15 +14,6 @@ RUN apt-get update && apt-get install -y \
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
-# Placeholders for Composer/Symfony scripts at build time (overridden by Railway at runtime)
-ENV APP_ENV=prod \
-    APP_DEBUG=0 \
-    APP_SECRET=build-time-secret-change-in-railway \
-    DATABASE_URL="mysql://build:build@127.0.0.1:3306/build?serverVersion=8.0.32&charset=utf8mb4" \
-    MESSENGER_TRANSPORT_DSN="doctrine://default?auto_setup=0" \
-    JWT_SECRET_KEY="%kernel.project_dir%/config/jwt/private.pem" \
-    JWT_PUBLIC_KEY="%kernel.project_dir%/config/jwt/public.pem" \
-    JWT_PASSPHRASE=""
 
 COPY composer.json composer.lock ./
 
@@ -30,20 +21,8 @@ RUN composer install --no-interaction --no-scripts --no-dev --optimize-autoloade
 
 COPY . .
 
-RUN if [ ! -f /app/.env ]; then \
-    printf '%s\n' \
-      'APP_ENV=prod' \
-      'APP_DEBUG=false' \
-      'APP_SECRET=build-time-secret-change-in-railway' \
-      'DATABASE_URL=mysql://build:build@127.0.0.1:3306/build?serverVersion=8.0.32&charset=utf8mb4' \
-      'MESSENGER_TRANSPORT_DSN=doctrine://default?auto_setup=0' \
-      'JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem' \
-      'JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem' \
-      'JWT_PASSPHRASE=' \
-      > /app/.env; \
-    fi
-
-RUN composer install --no-interaction --no-dev --optimize-autoloader --no-ansi
+# Regenerate autoload for copied src/; skip post-install scripts (need full Railway env at runtime)
+RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
 
 # Webpack Encore assets (requires vendor/ for @symfony/ux-turbo file: dependency)
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
@@ -54,8 +33,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get purge -y nodejs \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
-
-RUN php bin/console cache:warmup --env=prod --no-debug || true
 
 FROM php:8.3-fpm AS runtime
 
