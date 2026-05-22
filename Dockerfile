@@ -55,8 +55,8 @@ COPY nginx.conf /etc/nginx/conf.d/symfony.conf
 COPY entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-HEALTHCHECK --interval=10s --timeout=3s --start-period=15s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
+HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=3 \
+    CMD sh -c 'curl -f "http://127.0.0.1:${PORT:-80}/" || exit 1'
 
 EXPOSE 80
 
