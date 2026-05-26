@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 
@@ -12,7 +13,8 @@ class EmailVerificationService
 {
 public function __construct(
 private EntityManagerInterface $entityManager,
-private MailerInterface $mailer
+private MailerInterface $mailer,
+private LoggerInterface $logger,
 ) {}
 
 /**
@@ -39,7 +41,9 @@ $email = (new TemplatedEmail())
 'verificationUrl' => $verificationUrl,
 ]);
 
+// Queued via messenger (async transport) — must not block HTTP responses.
 $this->mailer->send($email);
+$this->logger->info('Verification email queued', ['email' => $user->getEmail()]);
 }
 
 /**

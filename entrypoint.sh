@@ -51,6 +51,11 @@ run_console "php bin/console cache:clear --env=prod --no-debug" || {
 
 chown -R www-data:www-data /app/var /app/config/jwt 2>/dev/null || true
 
+if [ -n "${DATABASE_URL:-}" ]; then
+  echo "Starting Messenger worker (async email + notifications)..."
+  run_console "php bin/console messenger:consume async --time-limit=0 --memory-limit=128M" &
+fi
+
 echo "Starting PHP-FPM..."
 php-fpm -D
 

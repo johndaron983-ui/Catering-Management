@@ -59,7 +59,54 @@ return $this->json([
 }
 
 /**
-* Resend verification email
+ * Resend verification email (public — for users who registered but cannot log in yet).
+ */
+#[Route('/resend-verification-email', name: 'api_resend_verification_email', methods: ['POST'])]
+public function resendVerificationByEmail(Request $request): JsonResponse
+{
+    $data = json_decode($request->getContent(), true);
+    $email = is_array($data) ? ($data['email'] ?? null) : null;
+
+    if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return $this->json([
+            'success' => false,
+            'message' => 'A valid email address is required',
+        ], 400);
+    }
+
+    $user = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+
+    if (!$user || $user->isVerified()) {
+        return $this->json([
+            'success' => true,
+            'message' => 'If that email is registered and unverified, a verification link was sent.',
+        ], 200);
+    }
+
+    $verificationToken = $this->emailVerificationService->generateVerificationToken();
+    $user->setVerificationToken($verificationToken);
+    $this->entityManager->flush();
+
+    $verificationUrl = $this->generateUrl(
+        'app_verify_email',
+        ['token' => $verificationToken],
+        UrlGeneratorInterface::ABSOLUTE_URL
+    );
+
+    try {
+        $this->emailVerificationService->sendVerificationEmail($user, $verificationUrl);
+    } catch (\Exception) {
+        // Email is queued async; ignore transport errors here.
+    }
+
+    return $this->json([
+        'success' => true,
+        'message' => 'If that email is registered and unverified, a verification link was sent.',
+    ], 200);
+}
+
+/**
+* Resend verification email (authenticated)
 */
 #[Route('/resend-verification', name: 'api_resend_verification', methods: ['POST'])]
 public function resendVerification(#[CurrentUser] ?User $user): JsonResponse
