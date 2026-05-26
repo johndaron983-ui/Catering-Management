@@ -55,7 +55,7 @@ class Inventory
     #[Assert\NotBlank(message: 'Unit is required')]
     private ?string $unit = null;
 
-    #[ORM\ManyToOne(targetEntity: Supplier::class, inversedBy: 'inventories')]
+    #[ORM\ManyToOne(targetEntity: Supplier::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: "CASCADE")]
     private ?Supplier $supplier = null;
 
@@ -80,7 +80,7 @@ class Inventory
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $imagePath = null;
 
-    #[ORM\ManyToOne(inversedBy: 'inventories')]
+    #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: true)]
     private ?User $createdBy = null;
 

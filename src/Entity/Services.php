@@ -61,7 +61,7 @@ class Services
     #[ORM\OneToMany(mappedBy: 'service', targetEntity: ServiceInventory::class, orphanRemoval: true)]
     private Collection $serviceInventories;
 
-    #[ORM\ManyToOne(inversedBy: 'services')]
+    #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: true)]
     private ?User $createdBy = null;
 

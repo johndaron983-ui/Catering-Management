@@ -41,7 +41,7 @@ class Booking
     #[ORM\Column]
     private ?float $totalPrice = 0000;
 
-    #[ORM\ManyToOne(inversedBy: 'bookings')]
+    #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?User $createdBy = null;
 

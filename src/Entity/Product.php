@@ -42,7 +42,7 @@ class Product
     #[ORM\OneToMany(targetEntity: Inventory::class, mappedBy: 'product')]
     private Collection $inventories;
 
-    #[ORM\ManyToOne(inversedBy: 'products')]
+    #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: true)]
     private ?User $createdBy = null;
 

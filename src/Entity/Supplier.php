@@ -37,7 +37,7 @@ class Supplier
     #[ORM\OneToMany(targetEntity: Product::class, mappedBy: 'supplier')]
     private Collection $products;
 
-    #[ORM\ManyToOne(inversedBy: 'suppliers')]
+    #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: true)]
     private ?User $createdBy = null;
 
