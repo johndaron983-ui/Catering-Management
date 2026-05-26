@@ -15,6 +15,8 @@ public function __construct(
 private EntityManagerInterface $entityManager,
 private MailerInterface $mailer,
 private LoggerInterface $logger,
+private string $mailerFromEmail,
+private string $mailerFromName,
 ) {}
 
 /**
@@ -32,7 +34,7 @@ return bin2hex(random_bytes(32));
 public function sendVerificationEmail(User $user, string $verificationUrl): void
 {
 $email = (new TemplatedEmail())
-->from(new Address('johnriodaron@gmail.com', 'Symfony Project Test')) // Change this to verified sender
+->from(new Address($this->mailerFromEmail, $this->mailerFromName))
 ->to(new Address($user->getEmail()))
 ->subject('Please verify your email address')
 ->htmlTemplate('emails/verification.html.twig')
@@ -43,7 +45,7 @@ $email = (new TemplatedEmail())
 
 // Queued via messenger (async transport) — must not block HTTP responses.
 $this->mailer->send($email);
-$this->logger->info('Verification email queued', ['email' => $user->getEmail()]);
+$this->logger->info('Verification email sent', ['email' => $user->getEmail(), 'from' => $this->mailerFromEmail]);
 }
 
 /**

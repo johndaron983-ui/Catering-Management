@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -53,9 +55,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $verificationToken = null;
 
+    /**
+     * @var Collection<int, Booking>
+     */
+    #[ORM\OneToMany(mappedBy: 'createdBy', targetEntity: Booking::class)]
+    private Collection $bookings;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
+        $this->bookings = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -210,6 +219,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getVerificationToken(): ?string
     {
         return $this->verificationToken;
+    }
+
+    /**
+     * @return Collection<int, Booking>
+     */
+    public function getBookings(): Collection
+    {
+        return $this->bookings;
+    }
+
+    public function addBooking(Booking $booking): static
+    {
+        if (!$this->bookings->contains($booking)) {
+            $this->bookings->add($booking);
+            $booking->setCreatedBy($this);
+        }
+
+        return $this;
+    }
+
+    public function removeBooking(Booking $booking): static
+    {
+        if ($this->bookings->removeElement($booking)) {
+            if ($booking->getCreatedBy() === $this) {
+                $booking->setCreatedBy(null);
+            }
+        }
+
+        return $this;
     }
 
     public function setVerificationToken(?string $verificationToken): static

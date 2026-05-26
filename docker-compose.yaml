@@ -1,4 +1,31 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:80"
+    environment:
+      APP_ENV: prod
+      APP_DEBUG: "0"
+      APP_SECRET: local-docker-secret-change-me
+      DATABASE_URL: "mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}?serverVersion=8.0.32&charset=utf8mb4"
+      JWT_SECRET_KEY: "%kernel.project_dir%/config/jwt/private.pem"
+      JWT_PUBLIC_KEY: "%kernel.project_dir%/config/jwt/public.pem"
+      JWT_PASSPHRASE: ""
+      MESSENGER_TRANSPORT_DSN: "doctrine://default?auto_setup=1"
+      MAILER_DSN: "${MAILER_DSN}"
+      MAILER_FROM_EMAIL: "${MAILER_FROM_EMAIL}"
+      MAILER_FROM_NAME: "${MAILER_FROM_NAME}"
+      OAUTH_GOOGLE_CLIENT_ID: ""
+      OAUTH_GOOGLE_CLIENT_SECRET: ""
+      CORS_ALLOW_ORIGIN: "^https?://(localhost|127\\.0\\.0\\.1)(:[0-9]+)?$"
+    depends_on:
+      mysql:
+        condition: service_started
+    networks:
+      - test_network
+
   mysql:
     image: mysql:8.0
     environment:
@@ -9,9 +36,9 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - db_data:/var/lib/mysql 
+      - db_data:/var/lib/mysql
     networks:
-    - test_network   
+      - test_network
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -27,12 +54,8 @@ services:
     networks:
       - test_network
 
-
 volumes:
   db_data:
 
 networks:
-  test_network:  
-
-
-    
+  test_network:
