@@ -11,6 +11,10 @@ fi
 chown www-data:www-data /app/.env 2>/dev/null || true
 chmod 644 /app/.env 2>/dev/null || true
 
+# Guarantee these are real OS env vars so PHP-FPM workers always see them.
+# The ':-' operator falls back when the var is unset OR empty.
+export MAILER_DSN="${MAILER_DSN:-null://null}"
+export MESSENGER_TRANSPORT_DSN="${MESSENGER_TRANSPORT_DSN:-doctrine://default?auto_setup=1}"
 
 if [ -z "${APP_SECRET:-}" ]; then
   echo "ERROR: Set APP_SECRET in Railway service variables."
@@ -48,6 +52,7 @@ else
 fi
 
 echo "Warming production cache..."
+rm -rf /app/var/cache/prod 2>/dev/null || true
 run_console "php bin/console cache:clear --env=prod --no-debug" || {
   echo "WARNING: cache clear failed; continuing startup"
 }
