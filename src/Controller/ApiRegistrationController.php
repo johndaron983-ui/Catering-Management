@@ -3,14 +3,15 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Message\SendVerificationEmailMessage;
 use App\Service\EmailVerificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api')]
@@ -21,13 +22,14 @@ public function __construct(
 private EntityManagerInterface $entityManager,
 private UserPasswordHasherInterface $passwordHasher,
 private EmailVerificationService $emailVerificationService,
-private ValidatorInterface $validator
+private ValidatorInterface $validator,
+private MessageBusInterface $messageBus,
 ) {}
 
 #[Route('/register', name: 'api_register', methods: ['POST'])]
 public function register(Request $request): JsonResponse
 {
-$data = json_decode($request->getContent(), true);
+$data = $request->toArray();
 
 // Validate required fields
 if (!isset($data['username']) || !isset($data['email']) || !isset($data['password'])) {
@@ -120,20 +122,8 @@ return $this->json([
 $this->entityManager->persist($user);
 $this->entityManager->flush();
 
-// Generate verification URL
-$verificationUrl = $this->generateUrl(
-'app_verify_email',
-['token' => $verificationToken],
-UrlGeneratorInterface::ABSOLUTE_URL
-);
-
-// Send verification email
-try {
-$this->emailVerificationService->sendVerificationEmail($user, $verificationUrl);
-} catch (\Exception $e) {
-// Log error but don't fail registration
-// User can request resend later
-}
+// Queue verification email — never block the HTTP response on SMTP
+$this->messageBus->dispatch(new SendVerificationEmailMessage($user->getId()));
 
 return $this->json([
 

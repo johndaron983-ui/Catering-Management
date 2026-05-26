@@ -53,6 +53,8 @@ security:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/google-login, roles: PUBLIC_ACCESS }
         - { path: ^/api/google-debug, roles: PUBLIC_ACCESS }
+        - { path: ^/api/resend-verification-email, roles: PUBLIC_ACCESS }
+        - { path: ^/api/verify-email, roles: PUBLIC_ACCESS }
         - { path: ^/api/mobile/health, roles: PUBLIC_ACCESS }
 
         # All other API routes require a valid JWT
