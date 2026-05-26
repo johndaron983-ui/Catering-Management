@@ -8,6 +8,9 @@ export PORT
 if [ ! -f /app/.env ]; then
   cp /app/.env.docker /app/.env
 fi
+chown www-data:www-data /app/.env 2>/dev/null || true
+chmod 644 /app/.env 2>/dev/null || true
+
 
 if [ -z "${APP_SECRET:-}" ]; then
   echo "ERROR: Set APP_SECRET in Railway service variables."

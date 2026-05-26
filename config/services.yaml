@@ -6,6 +6,8 @@
 parameters:
     default_mailer_from_email: 'noreply@example.com'
     default_mailer_from_name: 'Catering Management'
+    env(MAILER_DSN): 'null://null'
+    env(MESSENGER_TRANSPORT_DSN): 'doctrine://default?auto_setup=1'
 
 services:
     # default configuration for services in *this* file
