@@ -67,8 +67,11 @@ final class BookingController extends AbstractController
 
         $services = $servicesRepository->findAll();
 
+        $initialBookingIds = array_map(static fn (Booking $b) => $b->getId(), $bookings);
+
         return $this->render('bookings/index.html.twig', [
             'bookings' => $bookings,
+            'initial_booking_ids' => $initialBookingIds,
             'services' => $services,
             'current_search' => $search,
             'current_service' => $serviceId,

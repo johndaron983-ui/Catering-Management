@@ -56,14 +56,6 @@
         </div>
     </div>
 
-    {# Track the max booking id already rendered (prevents polling from duplicating). #}
-    {% set max_booking_id = 0 %}
-    {% for booking in bookings %}
-        {% if booking.id > max_booking_id %}
-            {% set max_booking_id = booking.id %}
-        {% endif %}
-    {% endfor %}
-
     <div class="mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
         <div class="overflow-x-auto">
             <table id="bookings-table" class="min-w-full table-auto text-sm">
@@ -82,7 +74,7 @@
                 </thead>
                 <tbody id="bookings-tbody" class="divide-y divide-gray-100 text-gray-800">
                 {% for booking in bookings %}
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50" data-booking-id="{{ booking.id }}">
                         <td class="px-4 py-3">
                             {% if booking.service and booking.service.image %}
                                 <img src="{{ asset('image/' ~ booking.service.image) }}" alt="{{ booking.service.name }}" class="h-12 w-12 object-cover rounded-md">
@@ -136,6 +128,27 @@
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 
 <script>
+window.__INITIAL_BOOKING_IDS__ = {{ initial_booking_ids|json_encode|raw }};
+
+function seedExistingBookingIds() {
+    if (!window.__adminBookingIds) {
+        window.__adminBookingIds = new Set();
+    }
+    (window.__INITIAL_BOOKING_IDS__ || []).forEach(function(id) {
+        window.__adminBookingIds.add(String(id));
+    });
+    document.querySelectorAll('#bookings-tbody tr[data-booking-id]').forEach(function(tr) {
+        const id = tr.getAttribute('data-booking-id');
+        if (id) window.__adminBookingIds.add(String(id));
+    });
+}
+
+function getMaxInitialBookingId() {
+    const ids = window.__INITIAL_BOOKING_IDS__ || [];
+    if (!ids.length) return 0;
+    return Math.max.apply(null, ids.map(Number));
+}
+
 function formatPeso(value) {
     try {
         return '₱' + Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -162,6 +175,8 @@ function imageCell(serviceImage, serviceName) {
 }
 
 function initializeBookingsTable() {
+    seedExistingBookingIds();
+
     // Destroy existing DataTable instance if it exists
     if ($.fn.DataTable.isDataTable('#bookings-table')) {
         $('#bookings-table').DataTable().destroy();
@@ -278,8 +293,13 @@ window.addEventListener('admin:booking_created', function(e) {
 
 // Polling fallback (Railway free plan friendly): inject new bookings without Mercure.
 (function startBookingsPolling() {
-    let afterId = Number({{ max_booking_id }}) || 0;
+    if (window.__bookingsPollingActive) return;
+    window.__bookingsPollingActive = true;
+
+    seedExistingBookingIds();
+    let afterId = getMaxInitialBookingId();
     let isRunning = false;
+    let pollTimer = null;
 
     async function tick() {
         if (isRunning) return;
@@ -302,11 +322,16 @@ window.addEventListener('admin:booking_created', function(e) {
             // silent: retry next tick
         } finally {
             isRunning = false;
-            setTimeout(tick, 4000);
+            pollTimer = setTimeout(tick, 4000);
         }
     }
 
-    setTimeout(tick, 1500);
+    document.addEventListener('turbo:before-cache', function() {
+        if (pollTimer) clearTimeout(pollTimer);
+        window.__bookingsPollingActive = false;
+    });
+
+    pollTimer = setTimeout(tick, 1500);
 })();
 </script>
 {% endblock %}
