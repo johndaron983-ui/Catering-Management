@@ -72,6 +72,57 @@ final class AdminController extends AbstractController
         ]);
     }
 
+    /**
+     * Railway-friendly realtime fallback: lightweight polling endpoint.
+     * Returns new bookings since a given id and the latest total revenue.
+     */
+    #[Route('/realtime/snapshot', name: 'app_admin_realtime_snapshot', methods: ['GET'])]
+    public function realtimeSnapshot(Request $request): JsonResponse
+    {
+        $afterId = (int) $request->query->get('afterId', 0);
+
+        $newBookings = $this->bookingRepository->createQueryBuilder('b')
+            ->leftJoin('b.service', 's')
+            ->addSelect('s')
+            ->where('b.id > :afterId')
+            ->setParameter('afterId', $afterId)
+            ->orderBy('b.id', 'DESC')
+            ->setMaxResults(20)
+            ->getQuery()
+            ->getResult();
+
+        $bookingPayload = array_map(function ($booking) {
+            $service = $booking->getService();
+            $image = $service ? $service->getImage() : null;
+            return [
+                'id' => $booking->getId(),
+                'service_name' => $service ? $service->getName() : '',
+                'service_image' => $image ? '/image/' . $image : null,
+                'customer_name' => $booking->getCustomerName(),
+                'event_date' => $booking->getEventDate()?->format('Y-m-d H:i'),
+                'status' => $booking->getStatus(),
+                'guest_count' => $booking->getGuestCount(),
+                'total_price' => $booking->getTotalPrice(),
+                'created_by' => $booking->getCreatedBy() ? $booking->getCreatedBy()->getUsername() : '-',
+            ];
+        }, $newBookings);
+
+        $allBookings = $this->bookingRepository->findAll();
+        $totalRevenue = array_sum(array_map(fn($booking) => $booking->getTotalPrice(), $allBookings));
+
+        $latestId = $afterId;
+        foreach ($bookingPayload as $b) {
+            $latestId = max($latestId, (int) $b['id']);
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'latestId' => $latestId,
+            'totalRevenue' => $totalRevenue,
+            'newBookings' => $bookingPayload,
+        ]);
+    }
+
     private function getTopServices(): array
     {
         $query = $this->servicesRepository->createQueryBuilder('s')

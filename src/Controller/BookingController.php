@@ -9,6 +9,7 @@ use App\Repository\InventoryRepository;
 use App\Repository\ServicesRepository;
 use App\Service\InventoryStockManager;
 use App\Service\ActivityLogService;
+use App\Service\NotificationService;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -152,7 +153,7 @@ final class BookingController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_bookings_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Booking $booking, EntityManagerInterface $entityManager, ServicesRepository $servicesRepository, InventoryRepository $inventoryRepository, InventoryStockManager $stockManager, ActivityLogService $activityLogService): Response
+    public function edit(Request $request, Booking $booking, EntityManagerInterface $entityManager, ServicesRepository $servicesRepository, InventoryRepository $inventoryRepository, InventoryStockManager $stockManager, ActivityLogService $activityLogService, NotificationService $notificationService): Response
     {
         $this->assertCanManageBooking($booking);
 
@@ -195,8 +196,20 @@ final class BookingController extends AbstractController
                     $totalPrice = $booking->getService()->getBasePrice() * $booking->getGuestCount();
                     $booking->setTotalPrice($totalPrice);
                 }
+
+                // Capture the old status before flush using Doctrine's UnitOfWork
+                $uow = $entityManager->getUnitOfWork();
+                $uow->computeChangeSets();
+                $changeSet = $uow->getEntityChangeSet($booking);
+                $oldStatus = isset($changeSet['status']) ? $changeSet['status'][0] : $booking->getStatus();
+                $newStatus = $booking->getStatus();
                 
                 $entityManager->flush();
+
+                // Publish real-time notification if status changed
+                if (isset($changeSet['status']) && $oldStatus !== $newStatus) {
+                    $notificationService->publishBookingStatusUpdate($booking, $oldStatus, $newStatus);
+                }
 
                 // Log booking update
                 $user = $this->getUser();

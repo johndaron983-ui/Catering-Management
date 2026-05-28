@@ -10,10 +10,13 @@ use App\Repository\ServicesRepository;
 use App\Trait\ApiResponseTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Mercure\HubInterface;
+use Symfony\Component\Mercure\Update;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Psr\Log\LoggerInterface;
 
 #[Route('/api/mobile')]
 class MobileApiController extends AbstractController
@@ -23,15 +26,21 @@ class MobileApiController extends AbstractController
     private ServicesRepository $servicesRepository;
     private BookingRepository $bookingRepository;
     private EntityManagerInterface $entityManager;
+    private HubInterface $mercureHub;
+    private LoggerInterface $logger;
 
     public function __construct(
         ServicesRepository $servicesRepository,
         BookingRepository $bookingRepository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        HubInterface $mercureHub,
+        LoggerInterface $logger
     ) {
         $this->servicesRepository = $servicesRepository;
         $this->bookingRepository = $bookingRepository;
         $this->entityManager = $entityManager;
+        $this->mercureHub = $mercureHub;
+        $this->logger = $logger;
     }
 
     /**
@@ -260,6 +269,39 @@ class MobileApiController extends AbstractController
 
         $this->entityManager->persist($booking);
         $this->entityManager->flush();
+
+        // Admin realtime: notify staff/admin dashboards a booking was created
+        try {
+            $serviceImage = $service->getImage();
+            $payload = [
+                'type' => 'booking_created',
+                'booking' => [
+                    'id' => $booking->getId(),
+                    'service_name' => $service->getName(),
+                    'service_image' => $serviceImage ? '/image/' . $serviceImage : null,
+                    'customer_name' => $booking->getCustomerName(),
+                    'event_date' => $booking->getEventDate()?->format('Y-m-d H:i'),
+                    'status' => $booking->getStatus(),
+                    'guest_count' => $booking->getGuestCount(),
+                    'total_price' => $booking->getTotalPrice(),
+                    'created_by' => $user->getUsername(),
+                    'created_at' => (new \DateTimeImmutable())->format('c'),
+                ],
+            ];
+
+            $this->mercureHub->publish(new Update(
+                '/admin/bookings',
+                json_encode($payload, JSON_THROW_ON_ERROR),
+            ));
+        } catch (\Throwable $e) {
+            // Do not fail booking creation if realtime publish fails,
+            // but log it so we don't silently lose realtime updates.
+            $this->logger->error('[Mercure] Failed to publish booking_created', [
+                'error' => $e->getMessage(),
+                'booking_id' => $booking->getId(),
+                'topic' => '/admin/bookings',
+            ]);
+        }
 
         return $this->successResponse(
             $this->serializeBooking($booking, true),

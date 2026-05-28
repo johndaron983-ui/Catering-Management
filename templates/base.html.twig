@@ -769,6 +769,532 @@
             }
         });
     </script>
+
+    {# ========== REAL-TIME NOTIFICATION SYSTEM ========== #}
+    {% if app.user %}
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <style>
+        /* Toast Container */
+        #toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+            max-width: 420px;
+            width: 100%;
+        }
+
+        @media (max-width: 480px) {
+            #toast-container {
+                top: 12px;
+                right: 12px;
+                left: 12px;
+                max-width: none;
+            }
+        }
+
+        /* Toast Card */
+        .notification-toast {
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.12),
+                0 2px 8px rgba(0, 0, 0, 0.06),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            overflow: hidden;
+            animation: toastSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: relative;
+            transform: translateX(120%);
+            opacity: 0;
+        }
+
+        .notification-toast.removing {
+            animation: toastSlideOut 0.4s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes toastSlideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+                max-height: 200px;
+                margin-bottom: 12px;
+            }
+            to {
+                transform: translateX(120%);
+                opacity: 0;
+                max-height: 0;
+                margin-bottom: 0;
+                padding: 0;
+                border: 0;
+            }
+        }
+
+        /* Status Accent Bar */
+        .toast-accent {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 16px 0 0 16px;
+        }
+
+        .toast-accent.status-confirmed { background: linear-gradient(180deg, #22c55e, #16a34a); }
+        .toast-accent.status-completed { background: linear-gradient(180deg, #3b82f6, #2563eb); }
+        .toast-accent.status-cancelled { background: linear-gradient(180deg, #ef4444, #dc2626); }
+        .toast-accent.status-pending { background: linear-gradient(180deg, #f59e0b, #d97706); }
+
+        .toast-body {
+            padding: 16px 16px 16px 20px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        /* Status Icon */
+        .toast-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .toast-icon.status-confirmed { background: rgba(34, 197, 94, 0.12); }
+        .toast-icon.status-completed { background: rgba(59, 130, 246, 0.12); }
+        .toast-icon.status-cancelled { background: rgba(239, 68, 68, 0.12); }
+        .toast-icon.status-pending { background: rgba(245, 158, 11, 0.12); }
+
+        .toast-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .toast-title {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1f2937;
+            margin: 0 0 4px;
+            line-height: 1.3;
+        }
+
+        .toast-message {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            color: #6b7280;
+            margin: 0 0 8px;
+            line-height: 1.4;
+        }
+
+        .toast-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .toast-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .toast-badge.status-confirmed { background: rgba(34, 197, 94, 0.12); color: #16a34a; }
+        .toast-badge.status-completed { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
+        .toast-badge.status-cancelled { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
+        .toast-badge.status-pending { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+
+        .toast-time {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        /* Close Button */
+        .toast-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(0, 0, 0, 0.04);
+            color: #9ca3af;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .toast-close:hover {
+            background: rgba(0, 0, 0, 0.08);
+            color: #4b5563;
+        }
+
+        /* Progress Bar */
+        .toast-progress {
+            height: 3px;
+            background: rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+        }
+
+        .toast-progress-bar {
+            height: 100%;
+            border-radius: 0 0 16px 16px;
+            transition: width linear;
+        }
+
+        .toast-progress-bar.status-confirmed { background: linear-gradient(90deg, #22c55e, #4ade80); }
+        .toast-progress-bar.status-completed { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+        .toast-progress-bar.status-cancelled { background: linear-gradient(90deg, #ef4444, #f87171); }
+        .toast-progress-bar.status-pending { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+        /* Entrance animation for the status transition arrow */
+        .status-transition {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .status-transition .arrow {
+            color: #9ca3af;
+            font-size: 10px;
+        }
+
+        .status-old {
+            color: #9ca3af;
+            text-decoration: line-through;
+            text-transform: capitalize;
+        }
+
+        .status-new {
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .status-new.confirmed { color: #16a34a; }
+        .status-new.completed { color: #2563eb; }
+        .status-new.cancelled { color: #dc2626; }
+        .status-new.pending { color: #d97706; }
+    </style>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // IMPORTANT: Do not hardcode localhost/:3000. Use Symfony env MERCURE_PUBLIC_URL.
+        // Railway: set MERCURE_PUBLIC_URL to https://<mercure-domain>/.well-known/mercure
+        const MERCURE_PUBLIC_URL = '{{ mercure_public_url|default('') }}' || '';
+
+        const USER_ID = '{{ app.user.id }}';
+        const TOPIC = '/notifications/user/' + USER_ID;
+        const ADMIN_TOPIC = '/admin/bookings';
+        const IS_ADMIN_DASHBOARD_USER = {{ (is_granted('ROLE_ADMIN') or is_granted('ROLE_STAFF')) ? 'true' : 'false' }};
+        const TOAST_DURATION = 8000; // 8 seconds auto-dismiss
+        let eventSource = null;
+        let adminEventSource = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT_ATTEMPTS = 10;
+
+        // Status configuration
+        const STATUS_CONFIG = {
+            confirmed: { icon: '✅', label: 'Confirmed', title: 'Booking Confirmed!' },
+            completed: { icon: '🎉', label: 'Completed', title: 'Booking Completed!' },
+            cancelled: { icon: '❌', label: 'Cancelled', title: 'Booking Cancelled' },
+            pending: { icon: '⏳', label: 'Pending', title: 'Booking Pending' }
+        };
+
+        /**
+         * Connect to the Mercure Hub via Server-Sent Events
+         */
+        function connectToMercure() {
+            if (!MERCURE_PUBLIC_URL) {
+                console.warn('[Mercure] MERCURE_PUBLIC_URL is not set. Skipping SSE connection.');
+                return;
+            }
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            const url = new URL(MERCURE_PUBLIC_URL);
+            url.searchParams.append('topic', TOPIC);
+
+            try {
+                eventSource = new EventSource(url, { withCredentials: false });
+
+                eventSource.onopen = function() {
+                    console.log('[Mercure] Connected to SSE hub. Listening on topic:', TOPIC);
+                    reconnectAttempts = 0;
+                };
+
+                eventSource.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        console.log('[Mercure] Received notification:', data);
+
+                        if (data.type === 'booking_status_update') {
+                            showToast(data);
+                        }
+                    } catch (e) {
+                        console.error('[Mercure] Error parsing notification:', e);
+                    }
+                };
+
+                eventSource.onerror = function(event) {
+                    console.warn('[Mercure] SSE connection error. Attempting reconnect...');
+                    eventSource.close();
+
+                    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                        reconnectAttempts++;
+                        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                        console.log(`[Mercure] Reconnecting in ${delay}ms (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+                        setTimeout(connectToMercure, delay);
+                    } else {
+                        console.error('[Mercure] Max reconnect attempts reached. Giving up.');
+                    }
+                };
+            } catch (e) {
+                console.error('[Mercure] Failed to create EventSource:', e);
+            }
+        }
+
+        /**
+         * Admin realtime channel (Bookings created)
+         * Emits a CustomEvent('admin:booking_created', { detail: booking })
+         */
+        function connectAdminRealtime() {
+            if (!IS_ADMIN_DASHBOARD_USER) return;
+            if (!MERCURE_PUBLIC_URL) {
+                console.warn('[Mercure][Admin] MERCURE_PUBLIC_URL is not set. Skipping SSE connection.');
+                return;
+            }
+
+            if (adminEventSource) {
+                adminEventSource.close();
+            }
+
+            const url = new URL(MERCURE_PUBLIC_URL);
+            url.searchParams.append('topic', ADMIN_TOPIC);
+
+            try {
+                adminEventSource = new EventSource(url, { withCredentials: false });
+
+                adminEventSource.onopen = function() {
+                    console.log('[Mercure][Admin] Connected. Listening on topic:', ADMIN_TOPIC);
+                };
+
+                adminEventSource.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data && data.type === 'booking_created' && data.booking) {
+                            window.dispatchEvent(new CustomEvent('admin:booking_created', { detail: data.booking }));
+                        }
+                    } catch (e) {
+                        console.error('[Mercure][Admin] Error parsing event:', e);
+                    }
+                };
+
+                adminEventSource.onerror = function() {
+                    console.warn('[Mercure][Admin] SSE connection error. Reconnecting...');
+                    adminEventSource.close();
+                    setTimeout(connectAdminRealtime, 2000);
+                };
+            } catch (e) {
+                console.error('[Mercure][Admin] Failed to create EventSource:', e);
+            }
+        }
+
+        /**
+         * Show a premium toast notification
+         */
+        function showToast(data) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const status = data.new_status || 'pending';
+            const config = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = 'notification-toast';
+            toast.setAttribute('role', 'alert');
+
+            toast.innerHTML = `
+                <div class="toast-accent status-${status}"></div>
+                <button class="toast-close" aria-label="Dismiss notification">&times;</button>
+                <div class="toast-body">
+                    <div class="toast-icon status-${status}">${config.icon}</div>
+                    <div class="toast-content">
+                        <p class="toast-title">${config.title}</p>
+                        <p class="toast-message">
+                            Your booking for <strong>${escapeHtml(data.service_name)}</strong>
+                            on <strong>${escapeHtml(data.event_date)}</strong> has been updated.
+                        </p>
+                        <div class="toast-meta">
+                            <span class="status-transition">
+                                <span class="status-old">${escapeHtml(data.old_status)}</span>
+                                <span class="arrow">→</span>
+                                <span class="status-new ${status}">${escapeHtml(data.new_status)}</span>
+                            </span>
+                            <span class="toast-time">${timeStr}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="toast-progress">
+                    <div class="toast-progress-bar status-${status}" style="width: 100%;"></div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            // Animate progress bar
+            const progressBar = toast.querySelector('.toast-progress-bar');
+            requestAnimationFrame(() => {
+                progressBar.style.transitionDuration = TOAST_DURATION + 'ms';
+                progressBar.style.width = '0%';
+            });
+
+            // Auto-dismiss
+            const autoDismiss = setTimeout(() => dismissToast(toast), TOAST_DURATION);
+
+            // Close button
+            const closeBtn = toast.querySelector('.toast-close');
+            closeBtn.addEventListener('click', () => {
+                clearTimeout(autoDismiss);
+                dismissToast(toast);
+            });
+
+            // Play notification sound (subtle)
+            playNotificationSound();
+        }
+
+        /**
+         * Dismiss a toast with animation
+         */
+        function dismissToast(toast) {
+            if (toast.classList.contains('removing')) return;
+            toast.classList.add('removing');
+            toast.addEventListener('animationend', () => {
+                toast.remove();
+            });
+        }
+
+        /**
+         * Play a subtle notification sound using Web Audio API
+         */
+        function playNotificationSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+                oscillator.frequency.setValueAtTime(1047, audioCtx.currentTime + 0.1);
+                oscillator.type = 'sine';
+
+                gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.4);
+            } catch (e) {
+                // Audio API not available, silently ignore
+            }
+        }
+
+        /**
+         * Escape HTML to prevent XSS
+         */
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize on page load
+        function initMercure() {
+            if (!USER_ID) {
+                console.log('[Mercure] No user ID found, skipping SSE connection.');
+                return;
+            }
+            connectToMercure();
+            connectAdminRealtime();
+        }
+
+        // Support both Turbo and standard page loads
+        document.addEventListener('DOMContentLoaded', initMercure);
+        document.addEventListener('turbo:load', function() {
+            // Reconnect on Turbo navigation if not already connected
+            if (!eventSource || eventSource.readyState === EventSource.CLOSED) {
+                initMercure();
+            }
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            if (adminEventSource) {
+                adminEventSource.close();
+            }
+        });
+
+        // Cleanup before Turbo cache
+        document.addEventListener('turbo:before-cache', function() {
+            // Remove all toast notifications before caching
+            const container = document.getElementById('toast-container');
+            if (container) {
+                container.innerHTML = '';
+            }
+        });
+    })();
+    </script>
+    {% endif %}
+
     {% block scripts %}{% endblock %}
 </body>
 </html> 

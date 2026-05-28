@@ -7,7 +7,9 @@
         <div class="flex items-center justify-between">
             <div>
                 <div class="text-gray-500 text-sm font-medium">Total Revenue</div>
-                <div class="mt-2 text-3xl font-bold text-gray-800">₱{{ totalRevenue|number_format(2, '.', ',') }}</div>
+                <div class="mt-2 text-3xl font-bold text-gray-800">
+                    ₱<span id="kpi-total-revenue" data-value="{{ totalRevenue }}">{{ totalRevenue|number_format(2, '.', ',') }}</span>
+                </div>
                 <div class="mt-1 text-sm {{ revenueGrowth >= 0 ? 'text-green-600' : 'text-red-600' }}">
                     {{ revenueGrowth >= 0 ? '+' : '' }}{{ revenueGrowth }}% vs last month
                 </div>
@@ -294,6 +296,67 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+function formatPeso(value) {
+    try {
+        return Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    } catch (e) {
+        return String(value);
+    }
+}
+
+function applyRealtimeRevenueUpdate(booking) {
+    const el = document.getElementById('kpi-total-revenue');
+    if (!el) return;
+
+    const current = Number(el.getAttribute('data-value') || '0');
+    const add = Number(booking && booking.total_price ? booking.total_price : 0);
+    const next = current + add;
+
+    el.setAttribute('data-value', String(next));
+    el.textContent = formatPeso(next);
+}
+
+// Listen for Mercure admin events dispatched from base.html.twig
+window.addEventListener('admin:booking_created', function(e) {
+    const booking = e && e.detail ? e.detail : null;
+    applyRealtimeRevenueUpdate(booking);
+});
+
+// Polling fallback (Railway free plan friendly): if Mercure isn't available, still update KPI.
+(function startDashboardPolling() {
+    let afterId = 0;
+    let isRunning = false;
+
+    async function tick() {
+        if (isRunning) return;
+        isRunning = true;
+        try {
+            const res = await fetch(`/admin/realtime/snapshot?afterId=${afterId}`, {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            if (data && data.success) {
+                afterId = Math.max(afterId, Number(data.latestId || afterId));
+                if (typeof data.totalRevenue !== 'undefined') {
+                    const el = document.getElementById('kpi-total-revenue');
+                    if (el) {
+                        el.setAttribute('data-value', String(data.totalRevenue));
+                        el.textContent = formatPeso(data.totalRevenue);
+                    }
+                }
+            }
+        } catch (e) {
+            // silent: retry next tick
+        } finally {
+            isRunning = false;
+            setTimeout(tick, 4000);
+        }
+    }
+
+    setTimeout(tick, 1500);
+})();
+
 // Use window object to store chart instances to avoid redeclaration issues
 if (!window.dashboardCharts) {
     window.dashboardCharts = {
