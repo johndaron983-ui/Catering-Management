@@ -19,8 +19,7 @@ class JwtVerificationListener
             return;
         }
 
-        // Don't issue JWT tokens to unverified users
-        if (!$user->isVerified()) {
+        if ($user->hasEmail() && !$user->isVerified()) {
             throw new CustomUserMessageAuthenticationException('Please verify your email address before accessing the API.');
         }
 

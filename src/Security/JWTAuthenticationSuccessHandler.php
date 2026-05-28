@@ -20,13 +20,12 @@ public function onAuthenticationSuccess(Request $request, TokenInterface $token)
 /** @var User $user */
 $user = $token->getUser();
 
-// Check if email is verified
-if (!$user->isVerified()) {
-return new JsonResponse([
-'success' => false,
-'message' => 'Please verify your email address before logging in',
-'verified' => false
-], 403);
+if ($user->hasEmail() && !$user->isVerified()) {
+    return new JsonResponse([
+        'success' => false,
+        'message' => 'Please verify your email address before logging in',
+        'verified' => false,
+    ], 403);
 }
 
 // Generate JWT token

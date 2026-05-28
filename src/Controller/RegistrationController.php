@@ -31,39 +31,44 @@ class RegistrationController extends AbstractController
             
             if ($form->isValid()) {
                 try {
-                    // Check if email already exists
-                    $existingUser = $userRepository->findOneBy(['email' => $user->getEmail()]);
-                    if ($existingUser) {
-                        $this->addFlash('danger', 'An account with this email already exists.');
-                        return $this->redirectToRoute('app_register');
+                    if ($user->hasEmail()) {
+                        $existingUser = $userRepository->findOneBy(['email' => $user->getEmail()]);
+                        if ($existingUser) {
+                            $this->addFlash('danger', 'An account with this email already exists.');
+                            return $this->redirectToRoute('app_register');
+                        }
                     }
 
                     /** @var string $plainPassword */
                     $plainPassword = $form->get('plainPassword')->getData();
 
-                    // encode the plain password
                     $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
 
-                    // Generate verification token
-                    $verificationToken = $emailVerificationService->generateVerificationToken();
-                    $user->setVerificationToken($verificationToken);
-                    $user->setIsVerified(false);
+                    if ($user->hasEmail()) {
+                        $verificationToken = $emailVerificationService->generateVerificationToken();
+                        $user->setVerificationToken($verificationToken);
+                        $user->setIsVerified(false);
+                    } else {
+                        $user->setVerificationToken(null);
+                        $user->setIsVerified(true);
+                    }
 
                     $entityManager->persist($user);
                     $entityManager->flush();
 
                     $logger->info('User registered successfully', ['email' => $user->getEmail(), 'userId' => $user->getId()]);
 
-                    // Generate verification URL
-                    $verificationUrl = $this->generateUrl(
-                        'app_verify_email',
-                        ['token' => $verificationToken],
-                        UrlGeneratorInterface::ABSOLUTE_URL
-                    );
-
-                    // Send verification email
-                    $emailVerificationService->sendVerificationEmail($user, $verificationUrl);
-                    $this->addFlash('success', 'Registration successful! Please check your email to verify your account.');
+                    if ($user->hasEmail()) {
+                        $verificationUrl = $this->generateUrl(
+                            'app_verify_email',
+                            ['token' => $user->getVerificationToken()],
+                            UrlGeneratorInterface::ABSOLUTE_URL
+                        );
+                        $emailVerificationService->sendVerificationEmail($user, $verificationUrl);
+                        $this->addFlash('success', 'Registration successful! Please check your email to verify your account.');
+                    } else {
+                        $this->addFlash('success', 'Registration successful! You can sign in with your username and password.');
+                    }
                     return $this->redirectToRoute('app_login');
                 } catch (\Exception $e) {
                     $logger->error('Registration error: ' . $e->getMessage(), ['exception' => $e]);

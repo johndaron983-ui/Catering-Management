@@ -51,10 +51,10 @@ class LoginAuthenticator extends AbstractLoginFormAuthenticator
                     throw new CustomUserMessageAuthenticationException('Your account has been disabled. Please contact an administrator.');
                 }
 
-                if ($user->isVerified() !== true) {
+                if ($user->hasEmail() && $user->isVerified() !== true) {
                     throw new CustomUserMessageAuthenticationException('Please verify your email address before logging in.');
                 }
-                
+
                 return $user;
             }),
             new PasswordCredentials($request->getPayload()->getString('password')),
@@ -76,7 +76,7 @@ class LoginAuthenticator extends AbstractLoginFormAuthenticator
                 throw new CustomUserMessageAuthenticationException('Your account has been disabled. Please contact an administrator.');
             }
 
-            if ($user->isVerified() !== true) {
+            if ($user->hasEmail() && $user->isVerified() !== true) {
                 $request->getSession()->invalidate();
                 throw new CustomUserMessageAuthenticationException('Please verify your email address before logging in.');
             }

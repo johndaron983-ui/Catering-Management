@@ -29,8 +29,8 @@ class UserType extends AbstractType
             ])
             ->add('email', EmailType::class, [
                 'label' => 'Email',
+                'required' => false,
                 'constraints' => [
-                    new NotBlank(['message' => 'Email is required']),
                     new Email(['message' => 'Please enter a valid email']),
                 ],
             ])

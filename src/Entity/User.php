@@ -25,8 +25,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 180)]
     private ?string $username = null;
 
-    #[ORM\Column(length: 255, unique: true)]
-    private string $email;
+    #[ORM\Column(length: 255, unique: true, nullable: true)]
+    private ?string $email = null;
 
     /**
      * @var list<string> The user roles
@@ -84,7 +84,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        return (string) ($this->email ?? $this->username);
+    }
+
+    public function hasEmail(): bool
+    {
+        return $this->email !== null && $this->email !== '';
     }
 
     /**
@@ -129,9 +134,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->email;
     }
 
-    public function setEmail(string $email): static
+    public function setEmail(?string $email): static
     {
-        $this->email = $email;
+        $normalized = $email !== null ? trim($email) : null;
+        $this->email = ($normalized === '' || $normalized === null) ? null : $normalized;
 
         return $this;
     }

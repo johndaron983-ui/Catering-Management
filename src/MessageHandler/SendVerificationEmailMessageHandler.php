@@ -25,7 +25,7 @@ final class SendVerificationEmailMessageHandler
     public function __invoke(SendVerificationEmailMessage $message): void
     {
         $user = $this->entityManager->find(User::class, $message->userId);
-        if (!$user instanceof User || $user->isVerified()) {
+        if (!$user instanceof User || !$user->hasEmail() || $user->isVerified()) {
             return;
         }
 

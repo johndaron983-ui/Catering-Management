@@ -44,14 +44,18 @@ class ApiLoginController extends AbstractController
             $user = $this->userRepository->findOneBy(['username' => $identifier]);
         }
 
+        $needsEmailVerification = $user instanceof User
+            && $user->hasEmail()
+            && !$user->isVerified();
+
         if (
             !$user instanceof User ||
             !$user->isActive() ||
-            !$user->isVerified() ||
+            $needsEmailVerification ||
             !$this->passwordHasher->isPasswordValid($user, $password)
         ) {
             $message = 'Invalid credentials.';
-            if ($user instanceof User && $user->isActive() && !$user->isVerified()) {
+            if ($user instanceof User && $user->isActive() && $needsEmailVerification) {
                 $message = 'Please verify your email address before logging in.';
             }
             return new JsonResponse([

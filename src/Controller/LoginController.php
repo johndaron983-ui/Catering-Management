@@ -22,7 +22,7 @@ class LoginController extends AbstractController
         
         if ($user) {
             // Check if user is verified before allowing access
-            if ($user instanceof \App\Entity\User && $user->isVerified() !== true) {
+            if ($user instanceof \App\Entity\User && $user->hasEmail() && $user->isVerified() !== true) {
                 $this->addFlash('warning', 'Please verify your email address before accessing the application.');
                 return $this->redirectToRoute('app_login');
             }
