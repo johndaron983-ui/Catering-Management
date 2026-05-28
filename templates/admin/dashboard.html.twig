@@ -1,6 +1,14 @@
 {% extends 'admin/layout.html.twig' %}
 
 {% block admin_body %}
+{# Track the max booking id already rendered (prevents polling from treating existing records as new). #}
+{% set max_booking_id = 0 %}
+{% for booking in recentBookings %}
+    {% if booking.id > max_booking_id %}
+        {% set max_booking_id = booking.id %}
+    {% endif %}
+{% endfor %}
+
 <!-- KPI CARDS WIDGETS -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
@@ -324,7 +332,7 @@ window.addEventListener('admin:booking_created', function(e) {
 
 // Polling fallback (Railway free plan friendly): if Mercure isn't available, still update KPI.
 (function startDashboardPolling() {
-    let afterId = 0;
+    let afterId = Number({{ max_booking_id }}) || 0;
     let isRunning = false;
 
     async function tick() {

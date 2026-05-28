@@ -56,6 +56,14 @@
         </div>
     </div>
 
+    {# Track the max booking id already rendered (prevents polling from duplicating). #}
+    {% set max_booking_id = 0 %}
+    {% for booking in bookings %}
+        {% if booking.id > max_booking_id %}
+            {% set max_booking_id = booking.id %}
+        {% endif %}
+    {% endfor %}
+
     <div class="mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
         <div class="overflow-x-auto">
             <table id="bookings-table" class="min-w-full table-auto text-sm">
@@ -213,6 +221,9 @@ function initializeBookingsTable() {
 
 function injectBookingIntoTable(booking) {
     if (!booking || !booking.id) return;
+    // Strong guard against double-inserts (polling + SSE, turbo renders, etc.)
+    if (!window.__adminBookingIds) window.__adminBookingIds = new Set();
+    if (window.__adminBookingIds.has(String(booking.id))) return;
 
     if (!$.fn.DataTable.isDataTable('#bookings-table')) {
         // If DataTable isn't ready yet, try again shortly.
@@ -245,6 +256,7 @@ function injectBookingIntoTable(booking) {
     const node = table.row.add(row).draw(false).node();
     node.classList.add('hover:bg-gray-50');
     node.setAttribute('data-booking-id', booking.id);
+    window.__adminBookingIds.add(String(booking.id));
 
     // Move the newly-added row to the top visually
     const tbody = document.querySelector('#bookings-table tbody');
@@ -266,7 +278,7 @@ window.addEventListener('admin:booking_created', function(e) {
 
 // Polling fallback (Railway free plan friendly): inject new bookings without Mercure.
 (function startBookingsPolling() {
-    let afterId = 0;
+    let afterId = Number({{ max_booking_id }}) || 0;
     let isRunning = false;
 
     async function tick() {
