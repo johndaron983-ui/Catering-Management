@@ -51,7 +51,7 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
             {% for supplier in suppliers %}
-                <tr class="hover:bg-gray-50">
+                <tr class="hover:bg-gray-50" data-record-id="{{ supplier.id }}">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {% if supplier.imagePath %}
                             <img src="{{ asset(supplier.imagePath) }}" alt="{{ supplier.name }}" class="w-12 h-12 object-cover rounded-md" />
@@ -142,5 +142,9 @@ document.addEventListener('DOMContentLoaded', initializeSuppliersTable);
 document.addEventListener('turbo:load', initializeSuppliersTable);
 document.addEventListener('turbo:render', initializeSuppliersTable);
 </script>
+{% set realtime_module = 'suppliers' %}
+{% set realtime_table_selector = '#suppliers-table' %}
+{% set realtime_reinit_fn = 'initializeSuppliersTable' %}
+{% include 'admin/_module_realtime.html.twig' %}
 {% endblock %}
 {% endblock %}

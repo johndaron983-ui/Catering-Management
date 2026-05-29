@@ -1,0 +1,25 @@
+{% for product in products %}
+<tr data-record-id="{{ product.id }}">
+    <td class="px-6 py-4 whitespace-nowrap">
+        <div class="flex items-center">
+            {% if product.imagePath %}
+                <img src="{{ asset(product.imagePath) }}" alt="{{ product.name }}" class="w-10 h-10 object-cover rounded-md mr-3">
+            {% else %}
+                <div class="w-10 h-10 bg-gray-200 rounded-md mr-3 flex items-center justify-center text-gray-400">?</div>
+            {% endif %}
+            <span class="text-sm font-medium text-gray-900">{{ product.name }}</span>
+        </div>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ product.category }}</td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ product.unitPrice }}</td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ product.createDate ? product.createDate|date('Y-m-d') : '' }}</td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+        <a href="{{ path('app_product_show', {'id': product.id}) }}" class="text-blue-600 hover:text-blue-800">View</a>
+        <a href="{{ path('app_product_edit', {'id': product.id}) }}" class="text-green-600 hover:text-green-800">Edit</a>
+    </td>
+</tr>
+{% else %}
+<tr data-empty-row="1">
+    <td colspan="5" class="px-6 py-8 text-center text-gray-500">No products found.</td>
+</tr>
+{% endfor %}

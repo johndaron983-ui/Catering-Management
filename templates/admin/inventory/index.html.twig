@@ -19,7 +19,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <div class="text-gray-500 text-sm font-medium">Total Items</div>
-                <div class="mt-1 text-2xl font-bold text-gray-800">{{ stats.total_items ?? 0 }}</div>
+                <div id="stat-total-items" class="mt-1 text-2xl font-bold text-gray-800">{{ stats.total_items ?? 0 }}</div>
             </div>
             <div class="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
                 <span class="text-blue-600 text-lg">📦</span>
@@ -31,7 +31,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <div class="text-gray-500 text-sm font-medium">Low Stock</div>
-                <div class="mt-1 text-2xl font-bold text-yellow-600">{{ stats.low_stock_count ?? 0 }}</div>
+                <div id="stat-low-stock" class="mt-1 text-2xl font-bold text-yellow-600">{{ stats.low_stock_count ?? 0 }}</div>
             </div>
             <div class="h-10 w-10 bg-yellow-100 rounded-full flex items-center justify-center">
                 <span class="text-yellow-600 text-lg">⚠️</span>
@@ -43,7 +43,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <div class="text-gray-500 text-sm font-medium">Out of Stock</div>
-                <div class="mt-1 text-2xl font-bold text-red-600">{{ stats.out_of_stock_count ?? 0 }}</div>
+                <div id="stat-out-of-stock" class="mt-1 text-2xl font-bold text-red-600">{{ stats.out_of_stock_count ?? 0 }}</div>
             </div>
             <div class="h-10 w-10 bg-red-100 rounded-full flex items-center justify-center">
                 <span class="text-red-600 text-lg">🚫</span>
@@ -55,7 +55,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <div class="text-gray-500 text-sm font-medium">Total Value</div>
-                <div class="mt-1 text-2xl font-bold text-green-600">₱{{ (stats.total_value ?? 0)|number_format(2, '.', ',') }}</div>
+                <div id="stat-total-value" class="mt-1 text-2xl font-bold text-green-600">₱{{ (stats.total_value ?? 0)|number_format(2, '.', ',') }}</div>
             </div>
             <div class="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
                 <span class="text-green-600 text-lg">💰</span>
@@ -140,7 +140,7 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 {% for inventory in inventories %}
-                <tr class="hover:bg-gray-50">
+                <tr class="hover:bg-gray-50" data-record-id="{{ inventory.id }}">
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div>
                             <div class="text-sm font-medium text-gray-900">{{ inventory.name }}</div>
@@ -303,5 +303,9 @@ document.addEventListener('DOMContentLoaded', initializeInventoryTable);
 document.addEventListener('turbo:load', initializeInventoryTable);
 document.addEventListener('turbo:render', initializeInventoryTable);
 </script>
+{% set realtime_module = 'inventory' %}
+{% set realtime_table_selector = '#inventory-table' %}
+{% set realtime_reinit_fn = 'initializeInventoryTable' %}
+{% include 'admin/_module_realtime.html.twig' %}
 {% endblock %}
 {% endblock %}

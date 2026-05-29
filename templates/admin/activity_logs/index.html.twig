@@ -8,7 +8,7 @@
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Activity Logs</h1>
         <div class="text-sm text-gray-600">
-            Total: <span class="font-semibold">{{ total_count }}</span> records
+            Total: <span id="activity-logs-total-count" class="font-semibold">{{ total_count }}</span> records
         </div>
     </div>
 
@@ -191,6 +191,7 @@ function initializeActivityLogsTable() {
         lengthChange: true,
         searching: true,
         ordering: true,
+        order: [[0, 'desc']],
         info: true,
         paging: true,
         dom: '<"top"lf>rt<"bottom"ip>',
@@ -258,4 +259,15 @@ document.addEventListener('DOMContentLoaded', initializeActivityLogsTable);
 document.addEventListener('turbo:load', initializeActivityLogsTable);
 document.addEventListener('turbo:render', initializeActivityLogsTable);
 </script>
+{% set realtime_module = 'activity_logs' %}
+{% set realtime_table_selector = '#activity-logs-table' %}
+{% set realtime_reinit_fn = 'initializeActivityLogsTable' %}
+{% set realtime_query_params = {
+    'page': page|default(1),
+    'username': app.request.query.get('username'),
+    'action': app.request.query.get('action'),
+    'record_type': app.request.query.get('record_type'),
+    'role': app.request.query.get('role')
+} %}
+{% include 'admin/_module_realtime.html.twig' %}
 {% endblock %}

@@ -1,0 +1,71 @@
+{% for inventory in inventories %}
+<tr class="hover:bg-gray-50" data-record-id="{{ inventory.id }}">
+    <td class="px-6 py-4 whitespace-nowrap">
+        <div>
+            <div class="text-sm font-medium text-gray-900">{{ inventory.name }}</div>
+            {% if inventory.description %}
+                <div class="text-sm text-gray-500 truncate max-w-xs">{{ inventory.description }}</div>
+            {% endif %}
+        </div>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            {{ inventory.category }}
+        </span>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        <div class="flex items-center">
+            <div class="flex-1">
+                <div class="text-sm font-medium text-gray-900">{{ inventory.currentStock }} {{ inventory.unit }}</div>
+                <div class="text-xs text-gray-500">Min: {{ inventory.minimumStock }} | Max: {{ inventory.maximumStock }}</div>
+            </div>
+            <div class="ml-2">
+                {% if inventory.isOutOfStock() %}
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Out of Stock</span>
+                {% elseif inventory.isLowStock() %}
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Low Stock</span>
+                {% else %}
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">In Stock</span>
+                {% endif %}
+            </div>
+        </div>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm text-gray-900">₱{{ inventory.unitPrice|number_format(2, '.', ',') }}</div>
+        <div class="text-xs text-gray-500">Total: ₱{{ inventory.totalValue|number_format(2, '.', ',') }}</div>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+            {% if inventory.status == 'active' %}bg-green-100 text-green-800
+            {% elseif inventory.status == 'inactive' %}bg-yellow-100 text-yellow-800
+            {% else %}bg-red-100 text-red-800{% endif %}">
+            {{ inventory.status|title }}
+        </span>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        <span class="text-sm text-gray-900">{{ inventory.createdBy ? inventory.createdBy.username : '-' }}</span>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+        <div class="flex space-x-2">
+            <a href="{{ path('app_inventory_show', {'id': inventory.id}) }}" class="text-[#235A2F] hover:text-green-700">View</a>
+            <a href="{{ path('app_inventory_edit', {'id': inventory.id}) }}" class="text-blue-600 hover:text-blue-900">Edit</a>
+            <form method="post" action="{{ path('app_inventory_delete', {'id': inventory.id}) }}"
+                  onsubmit="return confirm('Are you sure you want to delete this item?');" class="inline">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ inventory.id) }}">
+                <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
+            </form>
+        </div>
+    </td>
+</tr>
+{% else %}
+<tr data-empty-row="1">
+    <td colspan="7" class="px-6 py-12 text-center">
+        <div class="text-gray-500">
+            <div class="text-4xl mb-4">📦</div>
+            <div class="text-lg font-medium mb-2">No inventory items found</div>
+            <div class="text-sm mb-4">Get started by adding your first inventory item</div>
+            <a href="{{ path('app_inventory_new') }}" class="bg-[#235A2F] text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">Add First Item</a>
+        </div>
+    </td>
+</tr>
+{% endfor %}
