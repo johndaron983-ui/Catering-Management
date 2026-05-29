@@ -8,6 +8,8 @@ parameters:
     default_mailer_from_name: 'Catering Management'
     env(MAILER_DSN): 'null://null'
     env(MESSENGER_TRANSPORT_DSN): 'doctrine://default?auto_setup=1'
+    # Off by default so a down Mercure hub cannot cause 504s on login (polling still works).
+    env(MERCURE_PUBLISH_ENABLED): 'false'
 
 services:
     # default configuration for services in *this* file
@@ -27,3 +29,11 @@ services:
         arguments:
             $mailerFromEmail: '%env(default:default_mailer_from_email:MAILER_FROM_EMAIL)%'
             $mailerFromName: '%env(default:default_mailer_from_name:MAILER_FROM_NAME)%'
+
+    App\Service\AdminRealtimePublisher:
+        arguments:
+            $publishEnabled: '%env(bool:MERCURE_PUBLISH_ENABLED)%'
+
+    App\Service\NotificationService:
+        arguments:
+            $publishEnabled: '%env(bool:MERCURE_PUBLISH_ENABLED)%'

@@ -8,7 +8,8 @@ use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
 
 /**
- * Publishes Mercure events so admin module pages refresh without waiting for the next poll.
+ * Publishes Mercure events for admin realtime UI.
+ * Must never block HTTP requests — publishing is optional and uses short HTTP timeouts.
  */
 final class AdminRealtimePublisher
 {
@@ -19,15 +20,25 @@ final class AdminRealtimePublisher
     public function __construct(
         private HubInterface $hub,
         private LoggerInterface $logger,
+        private bool $publishEnabled = false,
     ) {
+    }
+
+    public function isEnabled(): bool
+    {
+        return $this->publishEnabled;
     }
 
     public function publishModuleUpdate(
         string $module,
         string $action = 'updated',
         ?int $recordId = null,
-        bool $refreshSidebar = true,
+        bool $refreshSidebar = false,
     ): void {
+        if (!$this->publishEnabled) {
+            return;
+        }
+
         $this->publish(self::TOPIC_MODULES, [
             'type' => 'module_updated',
             'module' => $module,
@@ -41,27 +52,57 @@ final class AdminRealtimePublisher
         }
     }
 
+    /**
+     * One HTTP call max — avoids login/request timeouts when Mercure hub is down.
+     */
     public function notifyActivityLog(ActivityLog $log): void
     {
-        $action = strtolower($log->getAction() ?? 'updated');
-
-        $this->publishModuleUpdate(
-            AdminRealtimeSnapshotService::MODULE_ACTIVITY_LOGS,
-            $action,
-            $log->getId(),
-            false,
-        );
-
-        $related = $this->mapRecordTypeToModule($log->getRecordType());
-        if ($related !== null) {
-            $this->publishModuleUpdate($related, $action, $log->getRecordId(), false);
+        if (!$this->publishEnabled) {
+            return;
         }
 
-        $this->publishSidebarRefresh();
+        $action = strtoupper($log->getAction() ?? '');
+        // Auth events are high-frequency; admin lists use 2s polling instead.
+        if ($action === 'LOGIN' || $action === 'LOGOUT') {
+            return;
+        }
+
+        $modules = [AdminRealtimeSnapshotService::MODULE_ACTIVITY_LOGS];
+        $related = $this->mapRecordTypeToModule($log->getRecordType());
+        if ($related !== null) {
+            $modules[] = $related;
+        }
+
+        $this->publish(self::TOPIC_MODULES, [
+            'type' => 'modules_updated',
+            'modules' => array_values(array_unique($modules)),
+            'action' => strtolower($log->getAction() ?? 'updated'),
+            'record_id' => $log->getId(),
+            'timestamp' => (new \DateTimeImmutable())->format('c'),
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $booking
+     */
+    public function publishBookingCreated(array $booking): void
+    {
+        if (!$this->publishEnabled) {
+            return;
+        }
+
+        $this->publish(self::TOPIC_BOOKINGS, [
+            'type' => 'booking_created',
+            'booking' => $booking,
+        ]);
     }
 
     public function publishSidebarRefresh(): void
     {
+        if (!$this->publishEnabled) {
+            return;
+        }
+
         $this->publish(self::TOPIC_SIDEBAR, [
             'type' => 'sidebar_updated',
             'timestamp' => (new \DateTimeImmutable())->format('c'),
@@ -90,7 +131,7 @@ final class AdminRealtimePublisher
                 json_encode($payload, JSON_THROW_ON_ERROR),
             ));
         } catch (\Throwable $e) {
-            $this->logger->error('[Mercure] Admin realtime publish failed', [
+            $this->logger->warning('[Mercure] Publish skipped or failed (polling fallback remains active)', [
                 'topic' => $topic,
                 'error' => $e->getMessage(),
             ]);

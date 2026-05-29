@@ -44,7 +44,11 @@ class ActivityLogService
             $entityManager->persist($log);
             $entityManager->flush();
 
-            $this->adminRealtimePublisher->notifyActivityLog($log);
+            try {
+                $this->adminRealtimePublisher->notifyActivityLog($log);
+            } catch (\Throwable) {
+                // Mercure must never break logging or the current HTTP request.
+            }
 
             return $log;
         } catch (\Throwable) {

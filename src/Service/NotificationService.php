@@ -15,8 +15,10 @@ class NotificationService
 {
     public function __construct(
         private HubInterface $hub,
-        private LoggerInterface $logger
-    ) {}
+        private LoggerInterface $logger,
+        private bool $publishEnabled = false,
+    ) {
+    }
 
     /**
      * Publish a booking status change notification to the Mercure Hub.
@@ -26,6 +28,10 @@ class NotificationService
      */
     public function publishBookingStatusUpdate(Booking $booking, string $oldStatus, string $newStatus): void
     {
+        if (!$this->publishEnabled) {
+            return;
+        }
+
         $user = $booking->getCreatedBy();
 
         if (!$user) {

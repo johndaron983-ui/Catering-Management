@@ -1134,6 +1134,9 @@
                         if (data && data.type === 'module_updated' && data.module) {
                             window.dispatchEvent(new CustomEvent('admin:module_updated', { detail: data }));
                         }
+                        if (data && data.type === 'modules_updated' && data.modules) {
+                            window.dispatchEvent(new CustomEvent('admin:module_updated', { detail: data }));
+                        }
                         if (data && data.type === 'sidebar_updated') {
                             window.dispatchEvent(new CustomEvent('admin:sidebar_updated', { detail: data }));
                         }

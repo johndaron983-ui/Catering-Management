@@ -152,7 +152,12 @@
         if (!cfg || !event.detail) {
             return;
         }
-        if (event.detail.module === cfg.module) {
+        const detail = event.detail;
+        if (detail.module === cfg.module) {
+            scheduleMercureRefresh(cfg);
+            return;
+        }
+        if (Array.isArray(detail.modules) && detail.modules.indexOf(cfg.module) !== -1) {
             scheduleMercureRefresh(cfg);
         }
     }
