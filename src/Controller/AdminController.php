@@ -115,12 +115,83 @@ final class AdminController extends AbstractController
             $latestId = max($latestId, (int) $b['id']);
         }
 
+        $activeBookings = $this->bookingRepository->createQueryBuilder('b')
+            ->select('COUNT(b.id)')
+            ->where('b.status IN (:statuses)')
+            ->setParameter('statuses', ['confirmed', 'pending', 'processing'])
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $pendingCount = $this->bookingRepository->count(['status' => 'pending']);
+
+        $recentBookings = $this->bookingRepository->createQueryBuilder('b')
+            ->leftJoin('b.service', 's')
+            ->addSelect('s')
+            ->orderBy('b.eventDate', 'DESC')
+            ->setMaxResults(5)
+            ->getQuery()
+            ->getResult();
+
         return new JsonResponse([
             'success' => true,
             'latestId' => $latestId,
             'totalRevenue' => $totalRevenue,
+            'revenueGrowth' => $this->calculateRevenueGrowth(),
+            'activeBookings' => (int) $activeBookings,
+            'bookingGrowth' => $this->calculateBookingGrowth(),
+            'pendingRequests' => $pendingCount,
+            'recentBookings' => $this->serializeRecentBookingsForDashboard($recentBookings),
+            'topServices' => $this->serializeTopServicesForDashboard($this->getTopServices()),
+            'revenue7d' => $this->getMonthlyRevenue(),
+            'bookings7d' => $this->getWeeklyBookingTrends(),
             'newBookings' => $bookingPayload,
         ]);
+    }
+
+    /**
+     * @param array<int, \App\Entity\Booking> $bookings
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function serializeRecentBookingsForDashboard(array $bookings): array
+    {
+        $payload = [];
+        foreach ($bookings as $booking) {
+            $service = $booking->getService();
+            $payload[] = [
+                'id' => $booking->getId(),
+                'customer_name' => $booking->getCustomerName(),
+                'service_name' => $service ? $service->getName() : 'Catering Service',
+                'event_date_short' => $booking->getEventDate()?->format('M d') ?? '',
+                'guest_count' => $booking->getGuestCount(),
+                'total_price' => $booking->getTotalPrice(),
+                'status' => $booking->getStatus(),
+            ];
+        }
+
+        return $payload;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function serializeTopServicesForDashboard(array $rows): array
+    {
+        $payload = [];
+        foreach ($rows as $row) {
+            $image = $row['image'] ?? null;
+            $payload[] = [
+                'name' => $row['name'] ?? '',
+                'image' => $image ? '/image/' . $image : null,
+                'base_price' => (float) ($row['basePrice'] ?? 0),
+                'booking_count' => (int) ($row['bookingCount'] ?? 0),
+                'total_revenue' => (float) ($row['totalRevenue'] ?? 0),
+            ];
+        }
+
+        return $payload;
     }
 
     private function getTopServices(): array

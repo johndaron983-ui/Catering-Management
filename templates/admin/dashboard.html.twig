@@ -18,7 +18,7 @@
                 <div class="mt-2 text-3xl font-bold text-gray-800">
                     ₱<span id="kpi-total-revenue" data-value="{{ totalRevenue }}">{{ totalRevenue|number_format(2, '.', ',') }}</span>
                 </div>
-                <div class="mt-1 text-sm {{ revenueGrowth >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                <div id="kpi-revenue-growth" class="mt-1 text-sm {{ revenueGrowth >= 0 ? 'text-green-600' : 'text-red-600' }}">
                     {{ revenueGrowth >= 0 ? '+' : '' }}{{ revenueGrowth }}% vs last month
                 </div>
             </div>
@@ -32,8 +32,8 @@
         <div class="flex items-center justify-between">
             <div>
                 <div class="text-gray-500 text-sm font-medium">Active Bookings</div>
-                <div class="mt-2 text-3xl font-bold text-gray-800">{{ activeBookings }}</div>
-                <div class="mt-1 text-sm {{ bookingGrowth >= 0 ? 'text-blue-600' : 'text-red-600' }}">
+                <div id="kpi-active-bookings" class="mt-2 text-3xl font-bold text-gray-800">{{ activeBookings }}</div>
+                <div id="kpi-booking-growth" class="mt-1 text-sm {{ bookingGrowth >= 0 ? 'text-blue-600' : 'text-red-600' }}">
                     {{ bookingGrowth >= 0 ? '+' : '' }}{{ bookingGrowth }} this week
                 </div>
             </div>
@@ -47,7 +47,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <div class="text-gray-500 text-sm font-medium">Pending Requests</div>
-                <div class="mt-2 text-3xl font-bold text-gray-800">{{ pendingRequests }}</div>
+                <div id="kpi-pending-requests" class="mt-2 text-3xl font-bold text-gray-800">{{ pendingRequests }}</div>
                 <div class="mt-1 text-sm text-orange-600">Requires attention</div>
             </div>
             <div class="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center">
@@ -108,7 +108,7 @@
     <!-- SERVICES PERFOMANCE WIDGET -->
     <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Top Services</h3>
-        <div class="space-y-4">
+        <div id="top-services-list" class="space-y-4">
             {% for service in topServices %}
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
@@ -156,7 +156,7 @@
             <h3 class="text-lg font-semibold text-gray-800">Recent Bookings</h3>
             <a href="{{ path('app_bookings_index') }}" class="text-sm text-[#235A2F] hover:underline">View all</a>
         </div>
-        <div class="space-y-3">
+        <div id="recent-bookings-list" class="space-y-3">
             {% for booking in recentBookings %}
             <div class="flex items-center justify-between py-2 {{ loop.last ? '' : 'border-b border-gray-100' }}">
                 <div>
@@ -277,7 +277,7 @@
                 <span class="text-yellow-500 text-lg">📬</span>
                 <div>
                     <div class="font-medium text-yellow-800">New Booking Requests</div>
-                    <div class="text-sm text-yellow-600">3 pending booking requests require your attention</div>
+                    <div id="system-alert-pending-text" class="text-sm text-yellow-600">{{ pendingRequests }} pending booking request{{ pendingRequests == 1 ? '' : 's' }} require your attention</div>
                 </div>
             </div>
             
@@ -312,57 +312,193 @@ function formatPeso(value) {
     }
 }
 
-function applyRealtimeRevenueUpdate(booking) {
-    const el = document.getElementById('kpi-total-revenue');
-    if (!el) return;
-
-    const current = Number(el.getAttribute('data-value') || '0');
-    const add = Number(booking && booking.total_price ? booking.total_price : 0);
-    const next = current + add;
-
-    el.setAttribute('data-value', String(next));
-    el.textContent = formatPeso(next);
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
-// Listen for Mercure admin events dispatched from base.html.twig
-window.addEventListener('admin:booking_created', function(e) {
-    const booking = e && e.detail ? e.detail : null;
-    applyRealtimeRevenueUpdate(booking);
+function statusBadgeClasses(status) {
+    const s = (status || '').toLowerCase();
+    if (s === 'confirmed') return 'bg-green-100 text-green-800';
+    if (s === 'pending') return 'bg-yellow-100 text-yellow-800';
+    if (s === 'processing') return 'bg-blue-100 text-blue-800';
+    if (s === 'completed') return 'bg-gray-100 text-gray-800';
+    return 'bg-red-100 text-red-800';
+}
+
+function serviceEmoji(name) {
+    const n = (name || '').toLowerCase();
+    if (n.includes('wedding')) return '💒';
+    if (n.includes('corporate') || n.includes('business')) return '🏢';
+    if (n.includes('birthday') || n.includes('party')) return '🎉';
+    return '🍽️';
+}
+
+function getLast7DayLabels() {
+    const labels = [];
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+    }
+    return labels;
+}
+
+function renderTopServices(services) {
+    const container = document.getElementById('top-services-list');
+    if (!container) return;
+
+    if (!services || !services.length) {
+        container.innerHTML = '<div class="text-center py-8 text-gray-500"><div class="text-4xl mb-2">📊</div><div>No service data available</div></div>';
+        return;
+    }
+
+    container.innerHTML = services.map(function(s) {
+        const img = s.image
+            ? '<img src="' + escapeHtml(s.image) + '" alt="' + escapeHtml(s.name) + '" class="h-full w-full object-cover">'
+            : '<span class="text-gray-600 text-lg">' + serviceEmoji(s.name) + '</span>';
+        return '<div class="flex items-center justify-between">' +
+            '<div class="flex items-center space-x-3">' +
+            '<div class="h-12 w-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">' + img + '</div>' +
+            '<div><div class="font-medium text-gray-800">' + escapeHtml(s.name) + '</div>' +
+            '<div class="text-sm text-gray-500">' + s.booking_count + ' booking' + (s.booking_count === 1 ? '' : 's') + '</div></div></div>' +
+            '<div class="text-right"><div class="font-semibold text-gray-800">₱' + formatPeso(s.total_revenue) + '</div>' +
+            '<div class="text-xs text-green-600">Base: ₱' + Number(s.base_price).toLocaleString('en-US', { maximumFractionDigits: 0 }) + '</div></div></div>';
+    }).join('');
+}
+
+function renderRecentBookings(bookings) {
+    const container = document.getElementById('recent-bookings-list');
+    if (!container) return;
+
+    if (!bookings || !bookings.length) {
+        container.innerHTML = '<div class="text-center py-8 text-gray-500"><div class="text-4xl mb-2">📅</div><div>No recent bookings</div></div>';
+        return;
+    }
+
+    container.innerHTML = bookings.map(function(b, index) {
+        const border = index < bookings.length - 1 ? 'border-b border-gray-100' : '';
+        const statusLabel = (b.status || 'pending').charAt(0).toUpperCase() + (b.status || 'pending').slice(1);
+        return '<div class="flex items-center justify-between py-2 ' + border + '">' +
+            '<div><div class="font-medium text-gray-800">' + escapeHtml(b.customer_name) + '</div>' +
+            '<div class="text-sm text-gray-500">' + escapeHtml(b.service_name) + ' • ' + escapeHtml(b.event_date_short) + '</div>' +
+            '<div class="text-xs text-gray-400">' + b.guest_count + ' guests • ₱' + formatPeso(b.total_price) + '</div></div>' +
+            '<span class="text-xs px-2 py-1 rounded-full ' + statusBadgeClasses(b.status) + '">' + escapeHtml(statusLabel) + '</span></div>';
+    }).join('');
+}
+
+function updateDashboardCharts(snapshot) {
+    const labels = getLast7DayLabels();
+
+    if (window.dashboardCharts.revenueChart && Array.isArray(snapshot.revenue7d)) {
+        window.dashboardCharts.revenueChart.data.labels = labels;
+        window.dashboardCharts.revenueChart.data.datasets[0].data = snapshot.revenue7d;
+        window.dashboardCharts.revenueChart.update('none');
+    }
+
+    if (window.dashboardCharts.bookingChart && Array.isArray(snapshot.bookings7d)) {
+        window.dashboardCharts.bookingChart.data.labels = labels;
+        window.dashboardCharts.bookingChart.data.datasets[0].data = snapshot.bookings7d;
+        window.dashboardCharts.bookingChart.update('none');
+    }
+}
+
+function applyDashboardSnapshot(data) {
+    if (!data || !data.success) return;
+
+    const revenueEl = document.getElementById('kpi-total-revenue');
+    if (revenueEl && typeof data.totalRevenue !== 'undefined') {
+        revenueEl.setAttribute('data-value', String(data.totalRevenue));
+        revenueEl.textContent = formatPeso(data.totalRevenue);
+    }
+
+    const revenueGrowthEl = document.getElementById('kpi-revenue-growth');
+    if (revenueGrowthEl && typeof data.revenueGrowth !== 'undefined') {
+        const g = Number(data.revenueGrowth);
+        revenueGrowthEl.textContent = (g >= 0 ? '+' : '') + g + '% vs last month';
+        revenueGrowthEl.className = 'mt-1 text-sm ' + (g >= 0 ? 'text-green-600' : 'text-red-600');
+    }
+
+    const activeEl = document.getElementById('kpi-active-bookings');
+    if (activeEl && typeof data.activeBookings !== 'undefined') {
+        activeEl.textContent = String(data.activeBookings);
+    }
+
+    const bookingGrowthEl = document.getElementById('kpi-booking-growth');
+    if (bookingGrowthEl && typeof data.bookingGrowth !== 'undefined') {
+        const g = Number(data.bookingGrowth);
+        bookingGrowthEl.textContent = (g >= 0 ? '+' : '') + g + ' this week';
+        bookingGrowthEl.className = 'mt-1 text-sm ' + (g >= 0 ? 'text-blue-600' : 'text-red-600');
+    }
+
+    const pendingEl = document.getElementById('kpi-pending-requests');
+    if (pendingEl && typeof data.pendingRequests !== 'undefined') {
+        pendingEl.textContent = String(data.pendingRequests);
+    }
+
+    const pendingAlertEl = document.getElementById('system-alert-pending-text');
+    if (pendingAlertEl && typeof data.pendingRequests !== 'undefined') {
+        const n = Number(data.pendingRequests);
+        pendingAlertEl.textContent = n + ' pending booking request' + (n === 1 ? '' : 's') + ' require your attention';
+    }
+
+    if (data.recentBookings) {
+        renderRecentBookings(data.recentBookings);
+    }
+
+    if (data.topServices) {
+        renderTopServices(data.topServices);
+    }
+
+    updateDashboardCharts(data);
+}
+
+window.addEventListener('admin:booking_created', function() {
+    if (typeof window.__refreshDashboardSnapshot === 'function') {
+        window.__refreshDashboardSnapshot();
+    }
 });
 
-// Polling fallback (Railway free plan friendly): if Mercure isn't available, still update KPI.
 (function startDashboardPolling() {
+    if (window.__dashboardPollingActive) return;
+    window.__dashboardPollingActive = true;
+
     let afterId = Number({{ max_booking_id }}) || 0;
     let isRunning = false;
+    let pollTimer = null;
 
     async function tick() {
         if (isRunning) return;
         isRunning = true;
         try {
-            const res = await fetch(`/admin/realtime/snapshot?afterId=${afterId}`, {
+            const res = await fetch('/admin/realtime/snapshot?afterId=' + afterId, {
                 headers: { 'Accept': 'application/json' }
             });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
             if (data && data.success) {
                 afterId = Math.max(afterId, Number(data.latestId || afterId));
-                if (typeof data.totalRevenue !== 'undefined') {
-                    const el = document.getElementById('kpi-total-revenue');
-                    if (el) {
-                        el.setAttribute('data-value', String(data.totalRevenue));
-                        el.textContent = formatPeso(data.totalRevenue);
-                    }
-                }
+                applyDashboardSnapshot(data);
             }
         } catch (e) {
-            // silent: retry next tick
+            // retry next tick
         } finally {
             isRunning = false;
-            setTimeout(tick, 4000);
+            pollTimer = setTimeout(tick, 4000);
         }
     }
 
-    setTimeout(tick, 1500);
+    window.__refreshDashboardSnapshot = tick;
+
+    document.addEventListener('turbo:before-cache', function() {
+        if (pollTimer) clearTimeout(pollTimer);
+        window.__dashboardPollingActive = false;
+        window.__refreshDashboardSnapshot = null;
+    });
+
+    pollTimer = setTimeout(tick, 1500);
 })();
 
 // Use window object to store chart instances to avoid redeclaration issues
