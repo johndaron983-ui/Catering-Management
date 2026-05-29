@@ -168,7 +168,9 @@
         </div>
     {% endif %}
 </div>
+{% endblock %}
 
+{% block admin_scripts %}
 <!-- Include DataTables CSS and JS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -179,6 +181,9 @@
 
 <script>
 function initializeActivityLogsTable() {
+    if (!document.getElementById('activity-logs-table')) {
+        return;
+    }
     // Destroy existing DataTable instance if it exists
     if ($.fn.DataTable.isDataTable('#activity-logs-table')) {
         $('#activity-logs-table').DataTable().destroy();
@@ -259,6 +264,9 @@ document.addEventListener('DOMContentLoaded', initializeActivityLogsTable);
 document.addEventListener('turbo:load', initializeActivityLogsTable);
 document.addEventListener('turbo:render', initializeActivityLogsTable);
 </script>
+{% endblock %}
+
+{% block admin_realtime %}
 {% set realtime_module = 'activity_logs' %}
 {% set realtime_table_selector = '#activity-logs-table' %}
 {% set realtime_reinit_fn = 'initializeActivityLogsTable' %}

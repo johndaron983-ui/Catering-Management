@@ -110,7 +110,9 @@
     </div>
     {% endif %}
 </div>
+{% endblock %}
 
+{% block admin_scripts %}
 <!-- DataTables CSS and JS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -118,6 +120,9 @@
 
 <script>
 function initializeUsersTable() {
+    if (!document.getElementById('users-table')) {
+        return;
+    }
     // Destroy existing DataTable instance if it exists
     if ($.fn.DataTable.isDataTable('#users-table')) {
         $('#users-table').DataTable().destroy();
@@ -176,6 +181,9 @@ document.addEventListener('DOMContentLoaded', initializeUsersTable);
 document.addEventListener('turbo:load', initializeUsersTable);
 document.addEventListener('turbo:render', initializeUsersTable);
 </script>
+{% endblock %}
+
+{% block admin_realtime %}
 {% set realtime_module = 'users' %}
 {% set realtime_table_selector = '#users-table' %}
 {% set realtime_reinit_fn = 'initializeUsersTable' %}

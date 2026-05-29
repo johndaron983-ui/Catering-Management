@@ -1,14 +1,15 @@
 /**
- * Admin module realtime: Mercure push + polling fallback.
- * Expects window.__ADMIN_MODULE_REALTIME__ from the page template.
+ * Admin module realtime polling (inventory, products, suppliers, users, activity logs).
+ * Loaded once from admin/layout; each page sets window.__ADMIN_MODULE_REALTIME__ before this runs.
  */
 (function () {
     'use strict';
 
     const DEFAULT_POLL_MS = 2000;
     let pollTimer = null;
-    let pollingActive = false;
     let mercureDebounce = null;
+    let visibilityHandler = null;
+    let moduleUpdatedHandler = null;
 
     function getConfig() {
         return window.__ADMIN_MODULE_REALTIME__ || null;
@@ -30,6 +31,17 @@
             return null;
         }
         return table.querySelector('tbody');
+    }
+
+    function destroyDataTable(cfg) {
+        if (!cfg.reinitTable || !window.jQuery) {
+            return;
+        }
+        const $ = window.jQuery;
+        const sel = cfg.tableSelector;
+        if ($.fn.DataTable && $.fn.DataTable.isDataTable(sel)) {
+            $(sel).DataTable().destroy();
+        }
     }
 
     function updateInventoryStats(stats, extra) {
@@ -56,6 +68,7 @@
         if (!tbody || typeof html !== 'string') {
             return;
         }
+        destroyDataTable(cfg);
         tbody.innerHTML = html;
         document.dispatchEvent(new CustomEvent('admin-realtime:updated', { detail: { module: cfg.module } }));
         if (cfg.reinitTable && typeof window[cfg.reinitTable] === 'function') {
@@ -81,7 +94,7 @@
             }
         }
 
-        if (data.rowsHtml) {
+        if (data.rowsHtml && document.querySelector(cfg.tableSelector)) {
             replaceTableBody(cfg, data.rowsHtml);
         }
 
@@ -113,6 +126,7 @@
             const res = await fetch(buildPollUrl(cfg), {
                 headers: { Accept: 'application/json' },
                 credentials: 'same-origin',
+                cache: 'no-store',
             });
             if (!res.ok) {
                 return;
@@ -120,7 +134,7 @@
             const data = await res.json();
             applyPayload(cfg, data);
         } catch (e) {
-            // silent — polling fallback
+            // polling fallback — ignore transient errors
         }
     }
 
@@ -130,7 +144,7 @@
         }
         mercureDebounce = setTimeout(function () {
             pollOnce(cfg);
-        }, 250);
+        }, 200);
     }
 
     function onModuleUpdated(event) {
@@ -143,39 +157,6 @@
         }
     }
 
-    function startPolling() {
-        const cfg = getConfig();
-        if (!cfg || !cfg.pollUrl || !cfg.tableSelector) {
-            return;
-        }
-        if (pollingActive) {
-            return;
-        }
-        pollingActive = true;
-
-        const interval = getPollMs(cfg);
-        const tick = function () {
-            pollOnce(cfg);
-        };
-
-        tick();
-        pollTimer = window.setInterval(tick, interval);
-
-        window.addEventListener('admin:module_updated', onModuleUpdated);
-
-        document.addEventListener('visibilitychange', function () {
-            if (document.hidden) {
-                if (pollTimer) {
-                    clearInterval(pollTimer);
-                    pollTimer = null;
-                }
-            } else if (!pollTimer) {
-                tick();
-                pollTimer = window.setInterval(tick, interval);
-            }
-        });
-    }
-
     function stopPolling() {
         if (pollTimer) {
             clearInterval(pollTimer);
@@ -185,14 +166,61 @@
             clearTimeout(mercureDebounce);
             mercureDebounce = null;
         }
-        window.removeEventListener('admin:module_updated', onModuleUpdated);
-        pollingActive = false;
+        if (moduleUpdatedHandler) {
+            window.removeEventListener('admin:module_updated', moduleUpdatedHandler);
+            moduleUpdatedHandler = null;
+        }
+        if (visibilityHandler) {
+            document.removeEventListener('visibilitychange', visibilityHandler);
+            visibilityHandler = null;
+        }
     }
 
-    document.addEventListener('DOMContentLoaded', startPolling);
-    document.addEventListener('turbo:load', function () {
+    function startPolling() {
         stopPolling();
+
+        const cfg = getConfig();
+        if (!cfg || !cfg.pollUrl || !cfg.tableSelector) {
+            return;
+        }
+
+        const interval = getPollMs(cfg);
+        const tick = function () {
+            pollOnce(cfg);
+        };
+
+        tick();
+        pollTimer = window.setInterval(tick, interval);
+
+        moduleUpdatedHandler = onModuleUpdated;
+        window.addEventListener('admin:module_updated', moduleUpdatedHandler);
+
+        visibilityHandler = function () {
+            if (document.hidden) {
+                if (pollTimer) {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                }
+            } else if (!pollTimer) {
+                tick();
+                pollTimer = window.setInterval(tick, interval);
+            }
+        };
+        document.addEventListener('visibilitychange', visibilityHandler);
+    }
+
+    function boot() {
         startPolling();
-    });
+    }
+
+    document.addEventListener('DOMContentLoaded', boot);
+    document.addEventListener('turbo:load', boot);
+    document.addEventListener('turbo:render', boot);
     document.addEventListener('turbo:before-cache', stopPolling);
+
+    if (document.readyState !== 'loading') {
+        boot();
+    }
+
+    window.AdminModuleRealtime = { boot: boot, stop: stopPolling };
 })();

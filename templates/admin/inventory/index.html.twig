@@ -233,9 +233,9 @@
     </div>
 </div>
 {% endif %}
+{% endblock %}
 
-{% block scripts %}
-{{ parent() }}
+{% block admin_scripts %}
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
@@ -303,10 +303,12 @@ document.addEventListener('DOMContentLoaded', initializeInventoryTable);
 document.addEventListener('turbo:load', initializeInventoryTable);
 document.addEventListener('turbo:render', initializeInventoryTable);
 </script>
+{% endblock %}
+
+{% block admin_realtime %}
 {% set realtime_module = 'inventory' %}
 {% set realtime_table_selector = '#inventory-table' %}
 {% set realtime_reinit_fn = 'initializeInventoryTable' %}
 {% set realtime_poll_ms = 2000 %}
 {% include 'admin/_module_realtime.html.twig' %}
-{% endblock %}
 {% endblock %}

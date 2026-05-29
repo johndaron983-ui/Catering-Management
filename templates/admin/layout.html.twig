@@ -164,4 +164,11 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 {% endblock %}
 
+{% block scripts %}
+    {{ parent() }}
+    {% block admin_scripts %}{% endblock %}
+    {% block admin_realtime %}{% endblock %}
+    <script src="{{ asset('js/admin-module-realtime.js') }}?v=3"></script>
+{% endblock %}
+
 

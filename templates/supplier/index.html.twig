@@ -78,9 +78,9 @@
         </table>
     </div>
 </div>
+{% endblock %}
 
-{% block scripts %}
-{{ parent() }}
+{% block admin_scripts %}
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
@@ -142,10 +142,12 @@ document.addEventListener('DOMContentLoaded', initializeSuppliersTable);
 document.addEventListener('turbo:load', initializeSuppliersTable);
 document.addEventListener('turbo:render', initializeSuppliersTable);
 </script>
+{% endblock %}
+
+{% block admin_realtime %}
 {% set realtime_module = 'suppliers' %}
 {% set realtime_table_selector = '#suppliers-table' %}
 {% set realtime_reinit_fn = 'initializeSuppliersTable' %}
 {% set realtime_poll_ms = 2000 %}
 {% include 'admin/_module_realtime.html.twig' %}
-{% endblock %}
 {% endblock %}

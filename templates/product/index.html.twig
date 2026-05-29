@@ -79,8 +79,7 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
-{{ parent() }}
+{% block admin_realtime %}
 {% set realtime_module = 'products' %}
 {% set realtime_table_selector = '#products-table' %}
 {% set realtime_poll_ms = 2000 %}
