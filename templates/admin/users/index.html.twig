@@ -179,6 +179,7 @@ document.addEventListener('turbo:render', initializeUsersTable);
 {% set realtime_module = 'users' %}
 {% set realtime_table_selector = '#users-table' %}
 {% set realtime_reinit_fn = 'initializeUsersTable' %}
+{% set realtime_poll_ms = 2000 %}
 {% set realtime_query_params = { 'page': app.request.query.getInt('page', 1) } %}
 {% include 'admin/_module_realtime.html.twig' %}
 {% endblock %}

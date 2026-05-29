@@ -145,6 +145,7 @@ document.addEventListener('turbo:render', initializeSuppliersTable);
 {% set realtime_module = 'suppliers' %}
 {% set realtime_table_selector = '#suppliers-table' %}
 {% set realtime_reinit_fn = 'initializeSuppliersTable' %}
+{% set realtime_poll_ms = 2000 %}
 {% include 'admin/_module_realtime.html.twig' %}
 {% endblock %}
 {% endblock %}

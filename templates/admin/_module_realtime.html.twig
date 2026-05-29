@@ -6,6 +6,7 @@ window.__ADMIN_MODULE_REALTIME__ = {
     pollUrl: {{ path('app_admin_realtime_module', { module: realtime_module })|json_encode|raw }},
     tableSelector: {{ (realtime_table_selector|default('#module-table'))|json_encode|raw }},
     reinitTable: {{ (realtime_reinit_fn|default(null))|json_encode|raw }},
+    pollMs: {{ (realtime_poll_ms|default(2000))|json_encode|raw }},
     queryParams: {{ (realtime_query_params|default({}))|json_encode|raw }}
 };
 </script>

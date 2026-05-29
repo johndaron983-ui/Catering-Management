@@ -83,6 +83,7 @@
 {{ parent() }}
 {% set realtime_module = 'products' %}
 {% set realtime_table_selector = '#products-table' %}
+{% set realtime_poll_ms = 2000 %}
 {% set realtime_query_params = {
     'search': current_search|default(''),
     'category': current_category|default('')

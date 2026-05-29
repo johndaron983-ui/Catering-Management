@@ -1,21 +1,35 @@
 /**
- * Admin module realtime polling (inventory, products, suppliers, users, activity logs).
+ * Admin module realtime: Mercure push + polling fallback.
  * Expects window.__ADMIN_MODULE_REALTIME__ from the page template.
  */
 (function () {
     'use strict';
 
-    const POLL_MS = 4000;
+    const DEFAULT_POLL_MS = 2000;
     let pollTimer = null;
     let pollingActive = false;
+    let mercureDebounce = null;
 
     function getConfig() {
         return window.__ADMIN_MODULE_REALTIME__ || null;
     }
 
+    function getPollMs(cfg) {
+        const ms = Number(cfg.pollMs);
+        return ms > 0 ? ms : DEFAULT_POLL_MS;
+    }
+
     function formatMoney(value) {
         const n = Number(value) || 0;
         return '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function getTableBody(cfg) {
+        const table = document.querySelector(cfg.tableSelector);
+        if (!table) {
+            return null;
+        }
+        return table.querySelector('tbody');
     }
 
     function updateInventoryStats(stats, extra) {
@@ -110,6 +124,25 @@
         }
     }
 
+    function scheduleMercureRefresh(cfg) {
+        if (mercureDebounce) {
+            clearTimeout(mercureDebounce);
+        }
+        mercureDebounce = setTimeout(function () {
+            pollOnce(cfg);
+        }, 250);
+    }
+
+    function onModuleUpdated(event) {
+        const cfg = getConfig();
+        if (!cfg || !event.detail) {
+            return;
+        }
+        if (event.detail.module === cfg.module) {
+            scheduleMercureRefresh(cfg);
+        }
+    }
+
     function startPolling() {
         const cfg = getConfig();
         if (!cfg || !cfg.pollUrl || !cfg.tableSelector) {
@@ -120,12 +153,15 @@
         }
         pollingActive = true;
 
+        const interval = getPollMs(cfg);
         const tick = function () {
             pollOnce(cfg);
         };
 
         tick();
-        pollTimer = window.setInterval(tick, POLL_MS);
+        pollTimer = window.setInterval(tick, interval);
+
+        window.addEventListener('admin:module_updated', onModuleUpdated);
 
         document.addEventListener('visibilitychange', function () {
             if (document.hidden) {
@@ -135,7 +171,7 @@
                 }
             } else if (!pollTimer) {
                 tick();
-                pollTimer = window.setInterval(tick, POLL_MS);
+                pollTimer = window.setInterval(tick, interval);
             }
         });
     }
@@ -145,6 +181,11 @@
             clearInterval(pollTimer);
             pollTimer = null;
         }
+        if (mercureDebounce) {
+            clearTimeout(mercureDebounce);
+            mercureDebounce = null;
+        }
+        window.removeEventListener('admin:module_updated', onModuleUpdated);
         pollingActive = false;
     }
 

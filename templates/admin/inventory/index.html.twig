@@ -306,6 +306,7 @@ document.addEventListener('turbo:render', initializeInventoryTable);
 {% set realtime_module = 'inventory' %}
 {% set realtime_table_selector = '#inventory-table' %}
 {% set realtime_reinit_fn = 'initializeInventoryTable' %}
+{% set realtime_poll_ms = 2000 %}
 {% include 'admin/_module_realtime.html.twig' %}
 {% endblock %}
 {% endblock %}

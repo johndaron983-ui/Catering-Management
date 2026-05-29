@@ -8,8 +8,10 @@ use Doctrine\Persistence\ManagerRegistry;
 
 class ActivityLogService
 {
-    public function __construct(private ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        private ManagerRegistry $managerRegistry,
+        private AdminRealtimePublisher $adminRealtimePublisher,
+    ) {
     }
 
     /**
@@ -41,6 +43,8 @@ class ActivityLogService
 
             $entityManager->persist($log);
             $entityManager->flush();
+
+            $this->adminRealtimePublisher->notifyActivityLog($log);
 
             return $log;
         } catch (\Throwable) {

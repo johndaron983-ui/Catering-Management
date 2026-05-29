@@ -1026,6 +1026,8 @@
         const USER_ID = '{{ app.user.id }}';
         const TOPIC = '/notifications/user/' + USER_ID;
         const ADMIN_TOPIC = '/admin/bookings';
+        const ADMIN_MODULES_TOPIC = '/admin/modules';
+        const ADMIN_SIDEBAR_TOPIC = '/admin/sidebar';
         const IS_ADMIN_DASHBOARD_USER = {{ (is_granted('ROLE_ADMIN') or is_granted('ROLE_STAFF')) ? 'true' : 'false' }};
         const TOAST_DURATION = 8000; // 8 seconds auto-dismiss
         let eventSource = null;
@@ -1112,12 +1114,15 @@
 
             const url = new URL(MERCURE_PUBLIC_URL);
             url.searchParams.append('topic', ADMIN_TOPIC);
+            url.searchParams.append('topic', ADMIN_MODULES_TOPIC);
+            url.searchParams.append('topic', ADMIN_SIDEBAR_TOPIC);
 
             try {
                 adminEventSource = new EventSource(url, { withCredentials: false });
 
                 adminEventSource.onopen = function() {
-                    console.log('[Mercure][Admin] Connected. Listening on topic:', ADMIN_TOPIC);
+                    console.log('[Mercure][Admin] Connected. Topics:', ADMIN_TOPIC, ADMIN_MODULES_TOPIC, ADMIN_SIDEBAR_TOPIC);
+                    window.__ADMIN_MERCURE_LIVE__ = true;
                 };
 
                 adminEventSource.onmessage = function(event) {
@@ -1125,6 +1130,12 @@
                         const data = JSON.parse(event.data);
                         if (data && data.type === 'booking_created' && data.booking) {
                             window.dispatchEvent(new CustomEvent('admin:booking_created', { detail: data.booking }));
+                        }
+                        if (data && data.type === 'module_updated' && data.module) {
+                            window.dispatchEvent(new CustomEvent('admin:module_updated', { detail: data }));
+                        }
+                        if (data && data.type === 'sidebar_updated') {
+                            window.dispatchEvent(new CustomEvent('admin:sidebar_updated', { detail: data }));
                         }
                     } catch (e) {
                         console.error('[Mercure][Admin] Error parsing event:', e);

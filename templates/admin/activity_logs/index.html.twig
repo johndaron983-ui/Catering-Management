@@ -262,6 +262,7 @@ document.addEventListener('turbo:render', initializeActivityLogsTable);
 {% set realtime_module = 'activity_logs' %}
 {% set realtime_table_selector = '#activity-logs-table' %}
 {% set realtime_reinit_fn = 'initializeActivityLogsTable' %}
+{% set realtime_poll_ms = 2000 %}
 {% set realtime_query_params = {
     'page': page|default(1),
     'username': app.request.query.get('username'),

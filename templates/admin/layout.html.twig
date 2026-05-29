@@ -152,7 +152,13 @@ document.addEventListener('DOMContentLoaded', function () {
             } catch (e) { /* ignore */ }
         }
         tick();
-        setInterval(tick, 8000);
+        setInterval(tick, 2000);
+        window.addEventListener('admin:sidebar_updated', tick);
+        window.addEventListener('admin:module_updated', function (e) {
+            if (e.detail && (e.detail.module === 'inventory' || e.detail.module === 'bookings')) {
+                tick();
+            }
+        });
     })();
 });
 </script>
